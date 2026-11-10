@@ -58,7 +58,13 @@ def main() -> int:
     if len(sys.argv) != 3:
         print("Usage: python -m climate_dashboard.integrity <data.csv> <manifest.json>")
         return 2
-    ok, expected, actual = verify_manifest(sys.argv[1], sys.argv[2])
+
+    try:
+        ok, expected, actual = verify_manifest(sys.argv[1], sys.argv[2])
+    except (OSError, ValueError) as exc:
+        print(f"INTEGRITY ERROR: {exc}")
+        return 1
+
     print(f"Expected SHA-256: {expected}")
     print(f"Actual SHA-256:   {actual}")
     print("INTEGRITY OK" if ok else "INTEGRITY FAILURE: file differs from trusted reference")

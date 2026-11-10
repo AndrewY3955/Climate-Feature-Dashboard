@@ -6,7 +6,7 @@ import pandas as pd
 import pytest
 
 from climate_dashboard.adversarial import create_adversarial_copy
-from climate_dashboard.integrity import verify_manifest, write_manifest
+from climate_dashboard.integrity import main, verify_manifest, write_manifest
 from climate_dashboard.pipeline import run_pipeline, TRUSTED_FILE, MANIFEST_FILE, OUT_DIR
 
 
@@ -65,6 +65,17 @@ def test_manifest_rejects_invalid_json(tmp_path):
 
     with pytest.raises(ValueError, match="Unable to read a valid integrity manifest"):
         verify_manifest(dataset, manifest)
+
+
+def test_integrity_cli_reports_invalid_manifest_cleanly(tmp_path, monkeypatch, capsys):
+    dataset = tmp_path / "trusted.csv"
+    dataset.write_text("record_id,value\nOBS001,10\n", encoding="utf-8")
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text("{invalid", encoding="utf-8")
+    monkeypatch.setattr("sys.argv", ["integrity", str(dataset), str(manifest)])
+
+    assert main() == 1
+    assert "INTEGRITY ERROR: Unable to read a valid integrity manifest" in capsys.readouterr().out
 
 
 def test_adversarial_copy_is_separate_and_documented():

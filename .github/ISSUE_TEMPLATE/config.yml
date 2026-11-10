@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability privately
+    url: https://github.com/AndrewY3955/Climate-Feature-Dashboard/security/advisories/new
+    about: Do not disclose vulnerabilities, credentials, or exploit details in a public issue. Private vulnerability reporting must be enabled in repository settings.

@@ -1,0 +1,74 @@
+name: Bug report
+description: Report a reproducible problem with the dashboard or data workflow.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before submitting, remove secrets and personal information from all details.
+        Do not attach source files, private datasets, credentials, access tokens, or unredacted logs.
+        For security vulnerabilities, use the private reporting option described in SECURITY.md instead of opening a public issue.
+  - type: dropdown
+    id: operating-system
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      description: Include the output of python --version.
+      placeholder: "Python 3.11.9"
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected component
+      options:
+        - Dashboard
+        - Data pipeline or validation
+        - Integrity verification
+        - Power BI export
+        - Launcher or installation
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Provide the smallest reproducible sequence. Use synthetic or public example data only.
+      placeholder: |
+        1. Run ...
+        2. Select ...
+        3. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: sanitized-output
+    attributes:
+      label: Sanitized error output (optional)
+      description: Remove usernames, local file paths containing personal information, tokens, URLs with credentials, and private data before pasting.
+      render: text
+    validations:
+      required: false

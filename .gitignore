@@ -22,12 +22,8 @@ Thumbs.db
 Desktop.ini
 
 # Reproducible pipeline outputs; keep reviewed inputs and source evidence tracked.
-data/processed/*
-!data/processed/.gitkeep
 
 # Incoming source material stays local unless explicitly reviewed for publication.
-data/intake/incoming/**
-!data/intake/incoming/README.md
 
 # Local editor settings
 .vscode/

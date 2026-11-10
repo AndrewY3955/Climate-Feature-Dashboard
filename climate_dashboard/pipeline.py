@@ -152,22 +152,23 @@ def validate_dataframe(
 
     real_rows = df["data_status"].astype("string").str.strip().ne("synthetic_demo").fillna(True)
     provenance_columns = ("source_name", "source_url", "source_id", "source_locator")
-    for column in provenance_columns:
-        if column not in df.columns:
-            errors.append({
-                "type": "missing_provenance_column",
-                "column": column,
-                "rows": df.index[real_rows].tolist(),
-            })
-            continue
-        blank_values = df[column].isna() | df[column].astype("string").str.strip().eq("").fillna(False)
-        affected = real_rows & blank_values
-        if affected.any():
-            errors.append({
-                "type": "missing_source_provenance",
-                "column": column,
-                "rows": df.index[affected].tolist(),
-            })
+    if real_rows.any():
+        for column in provenance_columns:
+            if column not in df.columns:
+                errors.append({
+                    "type": "missing_provenance_column",
+                    "column": column,
+                    "rows": df.index[real_rows].tolist(),
+                })
+                continue
+            blank_values = df[column].isna() | df[column].astype("string").str.strip().eq("").fillna(False)
+            affected = real_rows & blank_values
+            if affected.any():
+                errors.append({
+                    "type": "missing_source_provenance",
+                    "column": column,
+                    "rows": df.index[affected].tolist(),
+                })
 
     if real_rows.any():
         if source_register is None:

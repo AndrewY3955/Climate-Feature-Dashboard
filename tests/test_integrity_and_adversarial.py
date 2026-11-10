@@ -19,7 +19,7 @@ def test_trusted_manifest_verifies():
 
 def test_tampering_is_detected(tmp_path):
     run_pipeline()
-    tampered = tmp_path / "tampered.csv"
+    tampered = tmp_path / "trusted_data.csv"
     df = pd.read_csv(TRUSTED_FILE)
     df.loc[0, "value"] = float(df.loc[0, "value"]) + 1
     df.to_csv(tampered, index=False)

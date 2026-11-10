@@ -1,10 +1,12 @@
 from hashlib import sha256
+import json
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 from climate_dashboard.adversarial import create_adversarial_copy
-from climate_dashboard.integrity import verify_manifest
+from climate_dashboard.integrity import main, verify_manifest, write_manifest
 from climate_dashboard.pipeline import run_pipeline, TRUSTED_FILE, MANIFEST_FILE, OUT_DIR
 
 
@@ -17,13 +19,63 @@ def test_trusted_manifest_verifies():
 
 def test_tampering_is_detected(tmp_path):
     run_pipeline()
-    tampered = tmp_path / "tampered.csv"
+    tampered = tmp_path / "trusted_data.csv"
     df = pd.read_csv(TRUSTED_FILE)
     df.loc[0, "value"] = float(df.loc[0, "value"]) + 1
     df.to_csv(tampered, index=False)
     ok, expected, actual = verify_manifest(tampered, MANIFEST_FILE)
     assert not ok
     assert expected != actual
+
+
+def test_manifest_rejects_dataset_name_mismatch(tmp_path):
+    dataset = tmp_path / "trusted.csv"
+    dataset.write_text("record_id,value\nOBS001,10\n", encoding="utf-8")
+    manifest = tmp_path / "manifest.json"
+    write_manifest(dataset, manifest, "test")
+
+    with pytest.raises(ValueError, match="file name does not match"):
+        verify_manifest(tmp_path / "renamed.csv", manifest)
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        [],
+        {"file": "trusted.csv", "sha256": "not-a-hash"},
+        {"file": "other.csv", "sha256": "0" * 64},
+        {"sha256": "0" * 64},
+    ],
+)
+def test_manifest_rejects_invalid_structure_or_digest(tmp_path, payload):
+    dataset = tmp_path / "trusted.csv"
+    dataset.write_text("record_id,value\nOBS001,10\n", encoding="utf-8")
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ValueError):
+        verify_manifest(dataset, manifest)
+
+
+def test_manifest_rejects_invalid_json(tmp_path):
+    dataset = tmp_path / "trusted.csv"
+    dataset.write_text("record_id,value\nOBS001,10\n", encoding="utf-8")
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text("{invalid", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="Unable to read a valid integrity manifest"):
+        verify_manifest(dataset, manifest)
+
+
+def test_integrity_cli_reports_invalid_manifest_cleanly(tmp_path, monkeypatch, capsys):
+    dataset = tmp_path / "trusted.csv"
+    dataset.write_text("record_id,value\nOBS001,10\n", encoding="utf-8")
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text("{invalid", encoding="utf-8")
+    monkeypatch.setattr("sys.argv", ["integrity", str(dataset), str(manifest)])
+
+    assert main() == 1
+    assert "INTEGRITY ERROR: Unable to read a valid integrity manifest" in capsys.readouterr().out
 
 
 def test_adversarial_copy_is_separate_and_documented():

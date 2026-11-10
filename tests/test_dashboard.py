@@ -36,6 +36,7 @@ def test_dashboard_loads_source_data_and_verifies_trusted_manifest(tmp_path):
         "unit": "MWh",
         "data_year": "2024",
         "source_name": "Example report",
+        "source_url": "https://esg.tsmc.com/en-US/file/public/2024-TSMC-Sustainability-Report-e.pdf",
         "source_id": "SRC001",
         "data_status": "reported",
     }]
@@ -102,6 +103,7 @@ def test_dashboard_reports_manifest_mismatch(tmp_path):
         "unit": "MWh",
         "data_year": "2024",
         "source_name": "Example report",
+        "source_url": "https://esg.tsmc.com/en-US/file/public/2024-TSMC-Sustainability-Report-e.pdf",
         "source_id": "SRC001",
         "data_status": "reported",
     }]

@@ -5,6 +5,7 @@ import csv
 import hashlib
 import json
 from pathlib import Path
+from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 REVIEWED_DIR = ROOT / "data" / "processed" / "reviewed"
@@ -332,6 +333,23 @@ def build_powerbi_pack(
     missing_source_ids = observation_source_ids - source_ids
     if "" in observation_source_ids or missing_source_ids:
         raise ValueError(f"Trusted records reference missing source IDs: {sorted(missing_source_ids)}")
+
+    source_by_id = {row["source_id"]: row for row in source_rows if row.get("source_id")}
+    for row in trusted_rows:
+        source_id = row.get("source_id", "").strip()
+        observation_url = row.get("source_url", "").strip()
+        registered_url = source_by_id[source_id].get("source_url", "").strip()
+        parsed_url = urlparse(observation_url)
+        if parsed_url.scheme != "https" or not parsed_url.netloc:
+            raise ValueError(
+                f"Trusted record {row.get('record_id')} has an invalid HTTPS source URL."
+            )
+        if observation_url != registered_url:
+            raise ValueError(
+                f"Trusted record {row.get('record_id')} source URL does not match "
+                f"the registered URL for {source_id}."
+            )
+
     paper_ids = [row.get("paper_id", "") for row in paper_rows]
     if len(paper_ids) != len(set(paper_ids)) or len(paper_ids) < 5:
         raise ValueError("Research register must contain at least five unique paper IDs.")

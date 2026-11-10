@@ -21,9 +21,9 @@ pip-wheel-metadata/
 Thumbs.db
 Desktop.ini
 
-# Reproducible pipeline outputs; keep reviewed inputs and source evidence tracked.
-
-# Incoming source material stays local unless explicitly reviewed for publication.
+# Project CSV data and Power BI exports are intentionally versioned and public.
+# Do not add broad CSV, data/, data/raw/, data/intake/, or data/processed/ ignore rules.
+# Keep reviewed observations, source registers, generated reports, and Power BI CSVs visible.
 
 # Local editor settings
 .vscode/

@@ -28,6 +28,16 @@ def test_powerbi_pack_preserves_reviewed_data_and_relationships(tmp_path):
     assert len(_rows(powerbi_dir / "source_register.csv")) == 5
     assert len(_rows(powerbi_dir / "research_papers.csv")) == 5
 
+    source_urls = {
+        row["source_id"]: row["source_url"]
+        for row in _rows(powerbi_dir / "source_register.csv")
+    }
+    exported_observations = _rows(powerbi_dir / "trusted_observations.csv")
+    assert all(
+        row["source_url"] == source_urls[row["source_id"]]
+        for row in exported_observations
+    )
+
     dimension = _rows(powerbi_dir / "record_dimension.csv")
     assert len(dimension) == 7
     omitted = [row for row in dimension if row["adversarial_present"] == "false"]

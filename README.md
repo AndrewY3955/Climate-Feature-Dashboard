@@ -1,6 +1,6 @@
 # Semiconductor Climate Data Dashboard
 
-A local, source-aware dashboard that explores semiconductor-related environmental data and demonstrates how data manipulation can mislead users.
+A local, source-aware dashboard for exploring environmental observations related to semiconductor manufacturing and demonstrating how data manipulation can mislead users.
 
 ## Purpose
 
@@ -10,9 +10,37 @@ This is a classroom proof of concept—not a complete industry footprint or comp
 
 ## Dashboard preview
 
-![Trusted environmental-data overview from the local browser dashboard](evidence/trusted-overview.png)
+The screenshots below show the local browser dashboard, not Power BI Desktop.
 
-The screenshot shows the local browser prototype, not Power BI Desktop.
+<p>
+  <img src="evidence/trusted-overview.png" width="32%" alt="Trusted environmental data overview">
+  <img src="evidence/measure-guide.png" width="32%" alt="Metric and unit guidance">
+  <img src="evidence/provenance.png" width="32%" alt="Record provenance">
+</p>
+<p>
+  <img src="evidence/integrity.png" width="32%" alt="Integrity verification view">
+  <img src="evidence/adversarial-energy-source-units.png" width="32%" alt="Simulated energy and source manipulation">
+  <img src="evidence/adversarial-water-omission.png" width="32%" alt="Simulated omission of water records">
+</p>
+
+See [dashboard evidence](evidence/README.md) for descriptions and interpretation notes.
+
+## Key features
+
+- Explore reviewed environmental observations and their source details.
+- Inspect units, reporting boundaries, years, geography, and limitations.
+- Validate input records and generate normalized datasets.
+- Compare a trusted dataset with a separate, intentionally manipulated copy.
+- Review SHA-256 integrity results, validation reports, and manipulation logs.
+- Export a 13-table CSV model for optional Power BI import.
+
+## Technology
+
+- **Python** for data processing, validation, integrity checks, and the local server.
+- **pandas** for tabular data processing.
+- **HTML, CSS, and JavaScript** for the browser dashboard.
+- **pytest and GitHub Actions** for automated testing.
+- **CodeQL and dependency auditing** for repository security checks.
 
 ## Run the dashboard
 
@@ -36,7 +64,7 @@ The dashboard is local-only and is intended for use in a browser on the same com
 4. Keep synthetic test data and intentional manipulations separate from reviewed observations.
 5. Review the trusted and controlled adversarial views in the dashboard.
 
-A matching SHA-256 value checks bytes against a reference; it does not prove that a source claim is true, complete, or independently audited.
+A matching SHA-256 value checks bytes against a reference; it does not prove that a source claim is true, complete, or independently audited. See the [integrity and recovery guide](docs/integrity_and_recovery.md).
 
 ## Data and limitations
 
@@ -65,6 +93,8 @@ Synthetic test data and manipulated records are separate from the reviewed obser
 - [System architecture](docs/system_architecture.md)
 - [Threat model](docs/threat_model.md)
 - [Incident response](docs/incident_response.md)
+- [Integrity and recovery](docs/integrity_and_recovery.md)
+- [Security policy](SECURITY.md)
 - [Optional Power BI setup](docs/power_bi_setup.md)
 - [Dashboard evidence screenshots](evidence/README.md)
 
@@ -74,5 +104,7 @@ Install development dependencies and run the test suite:
 
 ```powershell
 python -m pip install -r requirements-dev.txt
-python -m pytest
+python -m pytest -W error::DeprecationWarning
 ```
+
+GitHub Actions tests Python 3.10–3.14 on Ubuntu and Python 3.11 on Windows and macOS.

@@ -1,6 +1,6 @@
 # Collecting sources and entering data
 
-Use the CSV templates in `data/intake/` with Excel or another spreadsheet editor. They contain headers only; no research citations or environmental measurements have been invented. Keep the original source files unchanged.
+The CSV files in `data/intake/` are populated starter datasets, not blank templates. At the time of writing, they contain reviewed example entries: five sources, five papers, and seven environmental observations. Review their contents before editing; preserve an original copy if you want to retain the supplied examples. Keep original source files unchanged.
 
 If you have source PDFs or CSVs that have not been reviewed or categorized yet, place copies in `data/intake/incoming/`. Keep their original filenames and contents. PDFs can be checked against reported page, table, or figure references; CSV columns and contents can be inspected before mapping records. Do not assume incoming CSVs share a schema or overwrite the supplied sample.
 
@@ -62,7 +62,7 @@ Keep the supplied/intake files as working evidence. Once the data have been revi
 6. The default command still processes `data/raw/environmental_data.csv` into `data/processed/`; do not overwrite the sample until a separate backup and test plan are approved.
 7. After the trusted dataset is reviewed, generate a separate intentional example. Never use an adversarial file as trusted input.
 
-The pipeline rejects a header-only/empty dataset. It currently includes illustrative synthetic sample metrics; replace them with reviewed records before reporting real-world conclusions.
+The pipeline rejects a header-only/empty dataset. The current reviewed intake contains example source-backed records; replace or extend them only after reviewing the original sources and recording any changes.
 
 ## Template field guides
 

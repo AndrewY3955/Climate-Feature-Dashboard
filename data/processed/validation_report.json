@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "row_count": 24,
+  "error_count": 0,
+  "warning_count": 1,
+  "errors": [],
+  "warnings": [
+    {
+      "type": "synthetic_data_present",
+      "message": "Dataset contains synthetic demonstration values; do not treat as real measurements."
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "file": "adversarial_data.csv",
+  "sha256": "a83df78c2823ca3adf83b3ebc7eea51f453311ce515699eaba0d7b0760401505",
+  "purpose": "Intentionally manipulated dataset for classroom adversarial demonstration",
+  "warning": "Integrity verification requires this manifest to be protected. If both the data file and manifest can be changed by the same attacker, the hash check alone is not sufficient."
+}

@@ -2,8 +2,12 @@
 
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
+
+
+_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 
 
 def sha256_file(path: str | Path) -> str:
@@ -31,8 +35,21 @@ def write_manifest(file_path: str | Path, manifest_path: str | Path, purpose: st
 
 
 def verify_manifest(file_path: str | Path, manifest_path: str | Path) -> tuple[bool, str, str]:
-    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
-    expected = manifest["sha256"]
+    file_path = Path(file_path)
+    manifest_path = Path(manifest_path)
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ValueError(f"Unable to read a valid integrity manifest: {manifest_path}") from exc
+
+    if not isinstance(manifest, dict):
+        raise ValueError("Integrity manifest must contain a JSON object.")
+    if manifest.get("file") != file_path.name:
+        raise ValueError("Integrity manifest file name does not match the dataset.")
+    expected = manifest.get("sha256")
+    if not isinstance(expected, str) or not _SHA256_PATTERN.fullmatch(expected):
+        raise ValueError("Integrity manifest must contain a 64-character lowercase SHA-256 digest.")
+
     actual = sha256_file(file_path)
     return actual == expected, expected, actual
 
@@ -41,7 +58,13 @@ def main() -> int:
     if len(sys.argv) != 3:
         print("Usage: python -m climate_dashboard.integrity <data.csv> <manifest.json>")
         return 2
-    ok, expected, actual = verify_manifest(sys.argv[1], sys.argv[2])
+
+    try:
+        ok, expected, actual = verify_manifest(sys.argv[1], sys.argv[2])
+    except (OSError, ValueError) as exc:
+        print(f"INTEGRITY ERROR: {exc}")
+        return 1
+
     print(f"Expected SHA-256: {expected}")
     print(f"Actual SHA-256:   {actual}")
     print("INTEGRITY OK" if ok else "INTEGRITY FAILURE: file differs from trusted reference")

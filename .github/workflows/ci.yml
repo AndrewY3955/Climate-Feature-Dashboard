@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   test:
-    name: Tests (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    name: Tests (${{ matrix.check_name }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     strategy:
@@ -25,18 +25,26 @@ jobs:
         include:
           - os: ubuntu-latest
             python-version: "3.10"
+            check_name: "ubuntu-latest, Python 3.10"
+          # These two names must match the required status checks in the main ruleset.
           - os: ubuntu-latest
             python-version: "3.11"
+            check_name: "Python 3.11"
           - os: ubuntu-latest
             python-version: "3.12"
+            check_name: "ubuntu-latest, Python 3.12"
           - os: ubuntu-latest
             python-version: "3.13"
+            check_name: "ubuntu-latest, Python 3.13"
           - os: ubuntu-latest
             python-version: "3.14"
+            check_name: "Python 3.14"
           - os: windows-latest
             python-version: "3.11"
+            check_name: "windows-latest, Python 3.11"
           - os: macos-latest
             python-version: "3.11"
+            check_name: "macos-latest, Python 3.11"
     steps:
       - name: Check out repository
         uses: actions/checkout@v7.0.1

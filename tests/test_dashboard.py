@@ -67,7 +67,7 @@ def test_dashboard_loads_source_data_and_verifies_trusted_manifest(tmp_path):
     assert len(payload["sources"]) == 5
     assert len(payload["papers"]) == 5
     assert len(payload["threat_intel"]) == 3
-    assert len(payload["controls"]) == 8
+    assert len(payload["controls"]) == 9
     assert len(payload["incident_response"]) == 6
 
 

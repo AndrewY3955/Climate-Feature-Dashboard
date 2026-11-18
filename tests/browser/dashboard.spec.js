@@ -214,7 +214,7 @@ test("keyboard tab order reaches every visible control in every dashboard view",
     await page.locator("#screen-selector").selectOption(viewId);
     const expected = await page.evaluate(() => {
       const candidates = Array.from(document.querySelectorAll(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])'
       )).filter((element) => !element.closest("[hidden]") && element.getClientRects().length > 0);
       candidates.forEach((element, index) => element.setAttribute("data-qa-tab-index", String(index)));
       return candidates.length;
@@ -229,6 +229,17 @@ test("keyboard tab order reaches every visible control in every dashboard view",
     }
     expect(visited.size, `Keyboard traversal coverage in ${viewId}`).toBe(expected);
   }
+});
+
+test("wide data tables can be focused and horizontally scrolled with the keyboard", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.locator("#screen-selector").selectOption("view-overview");
+  const region = page.locator("#view-overview .table-scroll").first();
+  await region.focus();
+  await expect(region).toBeFocused();
+  await page.keyboard.press("End");
+  const scrollLeft = await region.evaluate((element) => element.scrollLeft);
+  expect(scrollLeft).toBeGreaterThan(0);
 });
 
 test("visible views pass automated WCAG 2.1 AA accessibility checks", async ({ browser, baseURL }) => {

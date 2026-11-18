@@ -34,6 +34,7 @@ See [dashboard evidence](evidence/README.md) for descriptions and interpretation
 - Review SHA-256 integrity results, validation reports, and manipulation logs.
 - Audit assignment feature coverage and distinguish source-reported data, research context, and uncollected features.
 - Run a separate AES-256-GCM authenticated-encryption demonstration with wrong-key and tamper detection.
+- Open the local Security Demo Center for one-click validation, cryptographic checks, controlled ATT&CK scenario exercises, six-phase recovery, and pairwise comparability review.
 - Export filtered trusted records to UTF-8 CSV and print the current dashboard view with a landscape layout for wide tables.
 - Export a 13-table CSV model for optional Power BI import.
 
@@ -101,6 +102,7 @@ Synthetic test data and manipulated records are separate from the reviewed obser
 **Dashboard and security**
 - [Dashboard setup and views](docs/dashboard_local.md)
 - [Demo runbook](docs/demo_runbook.md)
+- [One-click security demo center](docs/security_demo_center.md)
 - [System architecture](docs/system_architecture.md)
 - [Threat model](docs/threat_model.md)
 - [Incident response](docs/incident_response.md)

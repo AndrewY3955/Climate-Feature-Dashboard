@@ -15,6 +15,19 @@ The assignment presents examples of relevant features; it does not require every
 
 No estimated environmental observations or derived analytical metrics are included in the seven-record trusted dataset. Some standardized values are mechanical unit conversions of source-reported values; the original values, units, and conversion methods are retained. Assumptions are documented as assumptions, not substituted for measurements. Synthetic fixture data and deliberately altered adversarial values are separate test/demo artifacts and must not be presented as environmental findings.
 
+## Current coverage summary
+
+The 17 feature groups currently classify as follows:
+
+| Status | Feature groups | Interpretation |
+|---|---:|---|
+| Source-reported | 3 | Directly represented by at least one reviewed source observation. |
+| Partial | 3 | Some relevant evidence exists, but the feature is not fully represented or its scope is limited. |
+| Research context | 7 | Discussed in selected literature but not measured in the trusted observation table. |
+| Not collected | 4 | No suitable project-specific observation is currently included. |
+
+These are counts of feature groups, not record counts, environmental totals, or impact scores. The dashboard calculates the category counts from the same feature register used to populate its table.
+
 ## Feature-to-evidence register
 
 | Assignment feature | Status | Trusted observation(s) | Evidence basis | Limitation and interpretation rule |

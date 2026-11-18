@@ -100,6 +100,24 @@ test("records search and source filters return correct result counts", async ({ 
   await expect(page.locator("#records-table tbody tr")).toHaveCount(4);
 });
 
+test("deep links select a valid view and invalid hashes fall back safely", async ({ page, baseURL }) => {
+  await page.goto(`${baseURL}/#view-overview`);
+  await expect(page.locator("#view-overview")).toBeVisible();
+  await page.goto(`${baseURL}/#not-a-dashboard-view`);
+  await expect(page.locator("#view-summary")).toBeVisible();
+  expect(new URL(page.url()).hash).toBe("#view-summary");
+});
+
+test("security policy blocks inline script execution", async ({ page }) => {
+  const violations = [];
+  page.on("console", (message) => {
+    if (message.text().includes("Content Security Policy")) violations.push(message.text());
+  });
+  await page.addScriptTag({ content: "window.__inlineCspProbe = true;" }).catch(() => {});
+  expect(await page.evaluate(() => window.__inlineCspProbe)).toBeUndefined();
+  expect(violations.length).toBeGreaterThan(0);
+});
+
 test("security policy is present and no runtime or console errors occur", async ({ page }) => {
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -155,21 +173,31 @@ test("keyboard users can skip navigation and reach labeled dashboard controls", 
   await expect(page.getByLabel("Information type")).toBeEnabled();
 });
 
-test("visible views pass automated WCAG 2.1 AA accessibility checks", async ({ page }) => {
-  for (const viewId of viewIds) {
-    await page.locator("#screen-selector").selectOption(viewId);
-    await expect(page.locator(`#${viewId}`)).toBeVisible();
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-      .analyze();
-    expect(
-      results.violations.map((violation) => ({
-        id: violation.id,
-        impact: violation.impact,
-        description: violation.description,
-        nodes: violation.nodes.map((node) => node.target),
-      })),
-      `Accessibility violations in ${viewId}`
-    ).toEqual([]);
+test("visible views pass automated WCAG 2.1 AA accessibility checks", async ({ browser, baseURL }) => {
+  // Axe injects its own script. Use a separate test-only context with CSP bypass;
+  // the normal application context is independently tested for CSP enforcement above.
+  const context = await browser.newContext({ bypassCSP: true, baseURL });
+  const page = await context.newPage();
+  try {
+    await page.goto("/");
+    await expect(page.locator("#loading-message")).toBeHidden();
+    for (const viewId of viewIds) {
+      await page.locator("#screen-selector").selectOption(viewId);
+      await expect(page.locator(`#${viewId}`)).toBeVisible();
+      const results = await new AxeBuilder({ page })
+        .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+        .analyze();
+      expect(
+        results.violations.map((violation) => ({
+          id: violation.id,
+          impact: violation.impact,
+          description: violation.description,
+          nodes: violation.nodes.map((node) => node.target),
+        })),
+        `Accessibility violations in ${viewId}`
+      ).toEqual([]);
+    }
+  } finally {
+    await context.close();
   }
 });

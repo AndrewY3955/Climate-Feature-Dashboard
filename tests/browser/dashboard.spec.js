@@ -214,7 +214,7 @@ test("keyboard tab order reaches every visible control in every dashboard view",
     await page.locator("#screen-selector").selectOption(viewId);
     const expected = await page.evaluate(() => {
       const candidates = Array.from(document.querySelectorAll(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])'
+        'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled])'
       )).filter((element) => !element.closest("[hidden]") && element.getClientRects().length > 0);
       candidates.forEach((element, index) => element.setAttribute("data-qa-tab-index", String(index)));
       return candidates.length;

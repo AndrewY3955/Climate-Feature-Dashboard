@@ -150,6 +150,15 @@ SECURITY_CONTROLS = [
         "limitation": "Local matching hashes alone cannot establish who changed a file or prove source truth.",
     },
     {
+        "control_id": "CTRL-09",
+        "control": "Demonstrate authenticated file encryption with AES-256-GCM",
+        "purpose": "Show confidentiality and tamper detection for a separately encrypted file using a passphrase-derived key.",
+        "control_type": "Preventive / detective demonstration",
+        "implementation_status": "Implemented as standalone demo utility",
+        "evidence": "scripts/encryption_demo.py; docs/encryption_demo.md; tests/test_encryption_demo.py",
+        "limitation": "Does not encrypt dashboard storage, GitHub Pages content, network traffic, or production backups; key management remains a deployment responsibility.",
+    },
+    {
         "control_id": "CTRL-08",
         "control": "Review report filters, axis scales, units, sources, and missing features before publication",
         "purpose": "Detect presentation-layer manipulation that file hashes cannot reveal.",

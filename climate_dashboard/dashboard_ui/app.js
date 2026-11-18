@@ -378,13 +378,48 @@ function renderOverview() {
   );
 }
 
-function renderRecords() {
+function filteredTrustedRecords() {
   const query = document.querySelector("#record-search").value.trim().toLocaleLowerCase();
   const sourceId = document.querySelector("#records-source-filter").value;
-  const records = dashboardData.trusted.filter((record) =>
+  return dashboardData.trusted.filter((record) =>
     (!sourceId || record.source_id === sourceId)
     && (!query || Object.values(record).some((value) => String(value).toLocaleLowerCase().includes(query)))
   );
+}
+
+function csvCell(value) {
+  let text = value === null || value === undefined ? "" : String(value);
+  if (typeof value === "string" && /^[=+@-]/.test(value)) text = `'${text}`;
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function downloadCsv(filename, rows) {
+  if (!rows.length) return false;
+  const columns = Object.keys(rows[0]);
+  const csv = [
+    columns.map(csvCell).join(","),
+    ...rows.map((row) => columns.map((column) => csvCell(row[column])).join(",")),
+  ].join("\r\n");
+  const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.hidden = true;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return true;
+}
+
+function renderRecords() {
+  const records = filteredTrustedRecords();
+  const sourceId = document.querySelector("#records-source-filter").value;
+  const query = document.querySelector("#record-search").value.trim();
+  document.querySelector("#download-records-csv").disabled = records.length === 0;
+  document.querySelector("#records-result-count").textContent =
+    `Showing ${records.length} of ${dashboardData.trusted.length} trusted records${sourceId ? ` for ${sourceId}` : ""}${query ? ` matching “${query}”` : ""}.`;
   renderTable(
     document.querySelector("#records-table"),
     tableColumns.records,
@@ -431,28 +466,20 @@ function refreshContextOptions() {
   const type = document.querySelector("#context-type-filter").value;
   const select = document.querySelector("#context-item-filter");
   const label = document.querySelector("#context-item-label");
+  const items = type === "sources" ? dashboardData.sources : dashboardData.papers;
+  const options = items.map((item) => ({
+    value: type === "sources" ? item.source_id : item.paper_id,
+    label: type === "sources"
+      ? `${item.source_id} · ${item.source_name}`
+      : `${item.paper_id} · ${item.full_citation}`,
+  }));
+  const preferred = options.some((option) => option.value === select.value)
+    ? select.value
+    : options[0]?.value;
+  label.firstChild.textContent = type === "sources" ? "Select a report" : "Select a research paper";
+  addOptions(select, options, preferred);
+  select.disabled = options.length === 0;
   document.querySelector("#context-type-filter").disabled = false;
-  if (type === "sources") {
-    label.firstChild.textContent = "Select a report";
-    addOptions(
-      select,
-      dashboardData.sources.map((source) => ({
-        value: source.source_id,
-        label: `${source.source_id} · ${source.source_name}`,
-      })),
-      select.value
-    );
-  } else {
-    label.firstChild.textContent = "Select a research paper";
-    addOptions(
-      select,
-      dashboardData.papers.map((paper) => ({
-        value: paper.paper_id,
-        label: `${paper.paper_id} · ${paper.full_citation}`,
-      })),
-      select.value
-    );
-  }
   renderDataContext();
 }
 
@@ -465,7 +492,8 @@ function renderDataContext() {
   if (type === "sources") {
     const source = dashboardData.sources.find((item) => item.source_id === selectedId);
     const records = dashboardData.trusted.filter((record) => record.source_id === selectedId);
-    title.textContent = "Registered source reports";
+    title.textContent = `Registered source reports (${dashboardData.sources.length})`;
+    document.querySelector("#context-result-count").textContent = `${dashboardData.sources.length} registered source reports. Select one to inspect its source metadata and linked trusted observations.`;
     renderTable(table, tableColumns.sources, dashboardData.sources, (row, key) => {
       if (key === "data_year_start") return `${row.data_year_start}–${row.data_year_end}`;
       return row[key];
@@ -512,7 +540,8 @@ function renderDataContext() {
   }
 
   const paper = dashboardData.papers.find((item) => item.paper_id === selectedId);
-  title.textContent = "Five selected journal-paper records";
+  title.textContent = `Selected research papers (${dashboardData.papers.length})`;
+  document.querySelector("#context-result-count").textContent = `${dashboardData.papers.length} selected full-text-reviewed research-paper records. These records provide research context and are not measured observations.`;
   renderTable(table, tableColumns.papers, dashboardData.papers);
   document.querySelector("#source-observations-title").textContent = "Source observations are managed separately";
   renderTable(
@@ -525,6 +554,7 @@ function renderDataContext() {
     return;
   }
   renderDetails(detail, `${paper.paper_id} · ${paper.full_citation}`, [
+    ["DOI / stable URL", paper.doi_or_stable_url],
     ["Research objective", paper.research_objective],
     ["Semiconductor feature", paper.semiconductor_feature],
     ["Data and variables", paper.data_or_variables],
@@ -535,6 +565,9 @@ function renderDataContext() {
     ["Review status", paper.review_status],
     ["Peer-review evidence", paper.peer_review_evidence],
   ]);
+  const linkArea = make("p", "source-link");
+  addSafeLink(linkArea, paper.doi_or_stable_url, "Open DOI / stable publisher record");
+  detail.firstChild.append(linkArea);
 }
 
 function renderFeatureCoverage() {
@@ -670,6 +703,8 @@ function renderControls() {
   }
   const container = document.querySelector("#control-cards");
   container.replaceChildren();
+  document.querySelector("#control-result-count").textContent =
+    `Showing ${controls.length} of ${dashboardData.controls.length} documented controls. Counts: ${["Implemented", "Documented manual", "Recommended"].map((group) => `${group} ${dashboardData.controls.filter((control) => controlGroup(control.implementation_status) === group).length}`).join("; ")}.`;
   for (const control of controls) {
     const card = make("article", "context-card");
     const header = make("div", "control-card-heading");
@@ -990,17 +1025,33 @@ function refreshComparisonFilters() {
 }
 
 function setView(viewId) {
+  const validView = document.getElementById(viewId);
+  if (!validView || !validView.classList.contains("view-panel")) return;
   for (const panel of document.querySelectorAll(".view-panel")) {
-    panel.hidden = panel.id !== viewId;
+    panel.hidden = panel !== validView;
   }
   const screenSelector = document.querySelector("#screen-selector");
   if (screenSelector.value !== viewId) screenSelector.value = viewId;
+  if (window.location.hash !== `#${viewId}`) {
+    window.history.replaceState(null, "", `#${viewId}`);
+  }
 }
 
 async function initialize() {
   document.querySelector("#screen-selector").addEventListener("change", (event) => {
     setView(event.currentTarget.value);
   });
+  window.addEventListener("hashchange", () => {
+    const hashView = window.location.hash.slice(1);
+    const hashPanel = hashView ? document.getElementById(hashView) : null;
+    setView(hashPanel?.classList.contains("view-panel") ? hashView : "view-summary");
+  });
+  const requestedView = window.location.hash.slice(1);
+  const requestedPanel = requestedView ? document.getElementById(requestedView) : null;
+  const initialView = requestedPanel?.classList.contains("view-panel")
+    ? requestedView
+    : "view-summary";
+  setView(initialView);
 
   try {
     const dataUrl = document.querySelector('meta[name="dashboard-data"]').content;
@@ -1008,6 +1059,30 @@ async function initialize() {
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || `Dashboard data request failed (${response.status}).`);
     dashboardData = payload;
+      const paperIds = new Set(payload.papers.map((paper) => paper.paper_id));
+  if (paperIds.size !== payload.papers.length || payload.papers.length < 5) {
+    throw new Error("Research-paper register must contain at least five unique records.");
+  }
+  for (const paper of payload.papers) {
+    if (!paper.full_citation || !paper.research_objective || !paper.main_findings || !paper.limitations || !paper.review_status) {
+      throw new Error(`Research-paper record ${paper.paper_id || "(unknown)"} is missing required review content.`);
+    }
+    if (!/^https:\/\//i.test(paper.doi_or_stable_url || "")) {
+      throw new Error(`Research-paper record ${paper.paper_id} has no valid HTTPS DOI or stable URL.`);
+    }
+  }
+  const controlIds = new Set(payload.controls.map((control) => control.control_id));
+  if (controlIds.size !== payload.controls.length || payload.controls.length !== 9) {
+    throw new Error("Security-control register must contain nine unique control records.");
+  }
+  const controlCounts = payload.controls.reduce((counts, control) => {
+    const group = controlGroup(control.implementation_status);
+    counts[group] = (counts[group] || 0) + 1;
+    return counts;
+  }, {});
+  if (controlCounts.Implemented !== 6 || controlCounts["Documented manual"] !== 1 || controlCounts.Recommended !== 2) {
+    throw new Error("Security-control status totals do not match the reviewed register (6 implemented, 1 documented manual, 2 recommended).");
+  }
     if (payload.validation.status !== "PASS" || !payload.integrity.verified) {
       const alert = document.querySelector("#integrity-alert");
       const reasons = [];
@@ -1071,6 +1146,13 @@ async function initialize() {
     document.querySelector("#comparison-value-basis").addEventListener("change", renderComparison);
     document.querySelector("#record-search").addEventListener("input", renderRecords);
     document.querySelector("#records-source-filter").addEventListener("change", renderRecords);
+    document.querySelector("#download-records-csv").addEventListener("click", () => {
+      const records = filteredTrustedRecords();
+      if (downloadCsv("trusted-records-filtered.csv", records)) {
+        document.querySelector("#records-result-count").textContent += " CSV download started.";
+      }
+    });
+    document.querySelector("#print-current-view").addEventListener("click", () => window.print());
     document.querySelector("#guide-metric").addEventListener("change", renderMeasureGuide);
     document.querySelector("#context-type-filter").addEventListener("change", refreshContextOptions);
     document.querySelector("#context-item-filter").addEventListener("change", renderDataContext);

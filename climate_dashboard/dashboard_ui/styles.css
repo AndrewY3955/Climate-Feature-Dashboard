@@ -27,19 +27,17 @@ body {
 }
 
 .skip-link {
-  position: absolute;
+  position: relative;
   z-index: 1000;
-  top: 0;
-  left: 0;
-  padding: 0.75rem 1rem;
-  transform: translateY(-150%);
+  display: inline-flex;
+  align-items: center;
+  margin: 0.5rem 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.35rem;
   background: #fff;
   color: var(--navy);
   font-weight: 700;
-}
-
-.skip-link:focus {
-  transform: translateY(0);
+  text-decoration: underline;
 }
 
 button,
@@ -122,7 +120,17 @@ h1 {
 }
 
 .screen-picker {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   margin-bottom: 0.85rem;
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0.65rem 0;
 }
 
 .screen-picker select {
@@ -690,4 +698,189 @@ tr:last-child td {
 
 .manipulation-analysis p:last-child {
   margin-bottom: 0;
+}
+
+
+/* Keyboard focus and narrow-screen usability */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid #075b72;
+  outline-offset: 3px;
+}
+
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-gutter: stable;
+}
+
+.table-scroll:focus-visible {
+  outline: 3px solid #075b72;
+  outline-offset: 2px;
+}
+
+.context-card,
+.table-card,
+.chart-card,
+.notice,
+.integrity-card,
+.summary-card {
+  min-width: 0;
+}
+
+.context-card a,
+.source-link a {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 420px) {
+  .header-inner,
+  .page-shell {
+    width: calc(100% - 1rem);
+  }
+
+  .filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    min-width: 0;
+  }
+
+  .filters > label,
+  .filters select,
+  .filters input,
+  .table-card,
+  .chart-card,
+  .measure-guide,
+  .table-scroll {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .filters-wide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .screen-picker select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .detail-grid,
+  .context-card-grid,
+  .dashboard-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hash-value {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+
+@media print {
+  @page {
+    size: landscape;
+    margin: 10mm;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 8pt;
+  }
+
+  .skip-link,
+  .screen-picker,
+  .filters,
+  .filter-actions,
+  button,
+  .table-scroll-controls {
+    display: none !important;
+  }
+
+  .site-header {
+    background: #fff !important;
+    color: #000 !important;
+    padding: 0 0 6mm !important;
+    border-bottom: 1px solid #777;
+  }
+
+  .site-header .eyebrow,
+  .site-header .header-copy,
+  .site-header h1 {
+    color: #000 !important;
+  }
+
+  .page-shell {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .view-panel[hidden] {
+    display: none !important;
+  }
+
+  .table-scroll {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: visible !important;
+    scrollbar-gutter: auto !important;
+  }
+
+  table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: auto !important;
+    font-size: 7pt !important;
+    border-collapse: collapse !important;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  th,
+  td {
+    padding: 3pt !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word;
+    color: #000 !important;
+    background: #fff !important;
+    border: 1px solid #999 !important;
+  }
+
+  .table-card,
+  .context-card,
+  .chart-card,
+  .notice,
+  .summary-card {
+    box-shadow: none !important;
+    break-inside: avoid;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  a {
+    color: #000 !important;
+    text-decoration: underline;
+    overflow-wrap: anywhere;
+  }
+
+  .hash-value {
+    overflow-wrap: anywhere;
+    word-break: break-all;
+  }
 }

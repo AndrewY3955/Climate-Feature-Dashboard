@@ -28,6 +28,20 @@ def test_powerbi_pack_preserves_reviewed_data_and_relationships(tmp_path):
     assert len(_rows(powerbi_dir / "source_register.csv")) == 5
     assert len(_rows(powerbi_dir / "research_papers.csv")) == 5
 
+    controls = _rows(powerbi_dir / "security_controls.csv")
+    assert len(controls) == 9
+    assert {row["control_id"] for row in controls} == {
+        "CTRL-01", "CTRL-02", "CTRL-03", "CTRL-04", "CTRL-05",
+        "CTRL-06", "CTRL-07", "CTRL-08", "CTRL-09",
+    }
+    status_counts = {
+        "Implemented": sum(row["implementation_status"].startswith("Implemented") for row in controls),
+        "Documented manual": sum(row["implementation_status"].startswith("Documented") for row in controls),
+        "Recommended": sum(row["implementation_status"].startswith("Recommended") for row in controls),
+    }
+    assert status_counts == {"Implemented": 6, "Documented manual": 1, "Recommended": 2}
+    assert next(row for row in controls if row["control_id"] == "CTRL-09")["implementation_status"] == "Implemented as standalone demo utility"
+
     source_urls = {
         row["source_id"]: row["source_url"]
         for row in _rows(powerbi_dir / "source_register.csv")

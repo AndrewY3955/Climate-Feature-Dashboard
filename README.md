@@ -34,6 +34,7 @@ See [dashboard evidence](evidence/README.md) for descriptions and interpretation
 - Review SHA-256 integrity results, validation reports, and manipulation logs.
 - Audit assignment feature coverage and distinguish source-reported data, research context, and uncollected features.
 - Run a separate AES-256-GCM authenticated-encryption demonstration with wrong-key and tamper detection.
+- Export filtered trusted records to UTF-8 CSV and print the current dashboard view with a landscape layout for wide tables.
 - Export a 13-table CSV model for optional Power BI import.
 
 ## Technology
@@ -41,7 +42,7 @@ See [dashboard evidence](evidence/README.md) for descriptions and interpretation
 - **Python** for data processing, validation, integrity checks, and the local server.
 - **pandas** for tabular data processing.
 - **HTML, CSS, and JavaScript** for the browser dashboard.
-- **pytest and GitHub Actions** for automated testing.
+- **pytest, Playwright, and axe-core** for Python, cross-browser, responsive, keyboard, and automated WCAG checks.
 - **CodeQL and dependency auditing** for repository security checks.
 
 ## Run the dashboard
@@ -105,6 +106,7 @@ Synthetic test data and manipulated records are separate from the reviewed obser
 - [Incident response](docs/incident_response.md)
 - [Integrity and recovery](docs/integrity_and_recovery.md)
 - [Security policy](SECURITY.md)
+- [Dashboard security and accessibility validation](docs/dashboard_security_validation.md)
 - [Optional Power BI setup](docs/power_bi_setup.md)
 - [Dashboard evidence screenshots](evidence/README.md)
 - [AES-GCM encryption demonstration](docs/encryption_demo.md)
@@ -118,4 +120,4 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -W error::DeprecationWarning
 ```
 
-GitHub Actions tests Python 3.10–3.14 on Ubuntu and Python 3.11 on Windows and macOS.
+GitHub Actions tests Python 3.10–3.14 on Ubuntu and Python 3.11 on Windows and macOS. The Browser QA workflow runs the 11 dashboard views in Chromium and Firefox, including responsive widths, keyboard navigation, runtime/CSP checks, and axe-core WCAG 2.1 AA checks. See [dashboard security and accessibility validation](docs/dashboard_security_validation.md) for hosting and testing boundaries.

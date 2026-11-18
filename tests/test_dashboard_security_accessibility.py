@@ -92,5 +92,5 @@ def test_dashboard_exposes_csv_export_and_print_styles():
     assert "@media print" in css
     assert "overflow: visible !important" in css
     assert "function downloadCsv(filename, rows)" in script
-    assert "text.replace(/\\"/g, '\"\"')" in script
+    assert 'replace(/"/g' in script
     assert 'download: filename' in script

@@ -108,6 +108,15 @@ test("deep links select a valid view and invalid hashes fall back safely", async
   expect(new URL(page.url()).hash).toBe("#view-summary");
 });
 
+test("records search treats hostile-looking input as inert text", async ({ page }) => {
+  await page.locator("#screen-selector").selectOption("view-records");
+  const probe = "<img src=x onerror=window.__xssProbe=1>";
+  await page.locator("#record-search").fill(probe);
+  await expect(page.locator("#records-table img")).toHaveCount(0);
+  expect(await page.evaluate(() => window.__xssProbe)).toBeUndefined();
+  await expect(page.locator("#records-result-count")).toContainText("0 of 7");
+});
+
 test("security policy blocks inline script execution", async ({ page }) => {
   const violations = [];
   page.on("console", (message) => {

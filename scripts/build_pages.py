@@ -58,7 +58,7 @@ def build_site() -> dict:
 
     (OUTPUT_DIR / "index.html").write_text(html, encoding="utf-8")
     for asset in ("styles.css", "app.js"):
-        shutil.copy2(UI_DIR / asset, output_dir / asset)
+        shutil.copy2(UI_DIR / asset, OUTPUT_DIR / asset)
 
     (OUTPUT_DIR / "data.json").write_text(
         json.dumps(payload, ensure_ascii=False, separators=(",", ":")),

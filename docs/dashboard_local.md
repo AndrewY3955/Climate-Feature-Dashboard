@@ -39,6 +39,12 @@ Use `--port 8766` to select another port or `--no-browser` to suppress automatic
 
 The app reads the generated files in `data/processed/reviewed/` and does not modify the intake, raw synthetic dataset, trusted CSV, or adversarial CSV. If a required output is missing, the page reports that the data needs to be generated.
 
+## Public GitHub Pages version
+
+The repository also builds a static copy for [GitHub Pages](https://andrewy3955.github.io/Climate-Feature-Dashboard/). It uses the same reviewed records, curated context tables, validation report, integrity result, and browser interface. Its data is exported to `data.json` during deployment; the browser does not call the local Python API.
+
+The Pages workflow builds from the reviewed intake template, refuses to publish when validation fails or the trusted-data manifest does not match, and deploys the generated site after a push to `main`. Pull requests run the static build as a validation step without publishing it. The public site is read-only and reflects the latest successful deployment. It does not replace the local Python server, which remains the supported environment for project development and data regeneration.
+
 ## Views and controls
 
 - **Project summary:** communicates the research question, record coverage, dataset limitations, pipeline state, and threat-intelligence scope.

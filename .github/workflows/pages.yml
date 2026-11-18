@@ -38,7 +38,7 @@ jobs:
         run: python -m pip install --upgrade pip && python -m pip install -r requirements.txt
 
       - name: Build and validate the static dashboard
-        run: python scripts/build_pages.py --output-dir site
+        run: python -m scripts.build_pages --output-dir site
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

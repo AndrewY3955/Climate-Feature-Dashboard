@@ -93,4 +93,4 @@ def test_dashboard_exposes_csv_export_and_print_styles():
     assert "overflow: visible !important" in css
     assert "function downloadCsv(filename, rows)" in script
     assert 'replace(/"/g' in script
-    assert 'download: filename' in script
+    assert 'link.download = filename' in script

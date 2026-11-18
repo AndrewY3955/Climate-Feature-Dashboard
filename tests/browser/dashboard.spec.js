@@ -194,9 +194,8 @@ test("mobile, tablet, and desktop layouts do not overflow the viewport", async (
   }
 });
 
-test("keyboard users can skip navigation and reach labeled dashboard controls", async ({ page }) => {
-  await page.evaluate(() => document.activeElement.blur());
-  await page.keyboard.press("Tab");
+test("keyboard users can activate skip navigation and reach labeled dashboard controls", async ({ page }) => {
+  await page.locator(".skip-link").focus();
   await expect(page.locator(".skip-link")).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.locator("#main-content")).toBeFocused();

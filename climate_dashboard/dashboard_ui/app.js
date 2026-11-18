@@ -582,6 +582,7 @@ function renderExecutiveSummary() {
     ["Full-text-reviewed journal papers", dashboardData.papers.length],
     ["ATT&CK scenario references", dashboardData.threat_intel.length],
     ["Logged simulation events", dashboardData.changes.length],
+    ["Environmental features accounted for", featureCoverage.length],
   ];
   const summary = document.querySelector("#executive-summary");
   summary.replaceChildren();

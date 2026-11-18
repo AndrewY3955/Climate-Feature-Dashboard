@@ -209,9 +209,11 @@ test("keyboard users can skip navigation and reach labeled dashboard controls", 
   await expect(page.getByLabel("Information type")).toBeEnabled();
 });
 
-test("keyboard tab order reaches every visible control in every dashboard view", async ({ page }) => {
+test("keyboard tab order reaches every visible control in every dashboard view", async ({ page, baseURL }) => {
   for (const viewId of viewIds) {
-    await page.locator("#screen-selector").selectOption(viewId);
+    await page.goto(`${baseURL}/#${viewId}`);
+    await page.reload();
+    await expect(page.locator("#loading-message")).toBeHidden();
     const expected = await page.evaluate(() => {
       const candidates = Array.from(document.querySelectorAll(
         'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled])'
@@ -220,7 +222,6 @@ test("keyboard tab order reaches every visible control in every dashboard view",
       return candidates.length;
     });
     expect(expected, `Focusable controls in ${viewId}`).toBeGreaterThan(0);
-    await page.evaluate(() => document.activeElement.blur());
     const visited = new Set();
     for (let step = 0; step < expected + 1; step += 1) {
       await page.keyboard.press("Tab");

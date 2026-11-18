@@ -8,7 +8,7 @@
 4. Press **Run all security tests and scenarios**.
 5. Review the test table, scenario cards, six response phases, and pairwise comparability results.
 
-The demo runs through the local-only `POST /api/security-demo/run` endpoint. It accepts only a same-origin local request with a small empty JSON object. It does not expose a general command runner or accept arbitrary scenario instructions.
+The demo runs through the local-only `POST /api/security-demo/run` endpoint. GitHub Pages includes a read-only copy of this page for discovery, but disables execution because the static host does not run the local Python API. It accepts only a same-origin local request with a small empty JSON object. It does not expose a general command runner or accept arbitrary scenario instructions.
 
 ## What the one-click run executes
 

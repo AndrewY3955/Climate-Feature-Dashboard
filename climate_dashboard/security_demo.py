@@ -16,7 +16,7 @@ from typing import Any
 
 import pandas as pd
 
-from climate_dashboard.integrity import sha256_file, verify_manifest
+from climate_dashboard.integrity import verify_manifest
 from climate_dashboard.pipeline import ROOT, SOURCE_REGISTER_FILE, validate_dataframe
 from scripts.encryption_demo import (
     MAGIC,
@@ -275,7 +275,7 @@ def _response_exercise(scenario: dict[str, Any], trusted_bytes: bytes) -> dict[s
     phases = [
         {"phase": "Preparation", "status": "COMPLETE", "action": "Captured the trusted SHA-256 baseline and record inventory."},
         {"phase": "Detection and analysis", "status": "DETECTED" if detected else "NOT DETECTED", "action": detail},
-        {"phase": "Containment", "status": "COMPLETE" if quarantined else "FAILED", "action": "Copied the altered artifact into an isolated temporary quarantine."},
+        {"phase": "Containment", "status": "COMPLETE" if quarantined else "FAILED", "action": "Preserved the altered artifact in an isolated in-memory quarantine buffer."},
         {"phase": "Eradication", "status": "COMPLETE" if eradicated else "FAILED", "action": "Removed the altered working copy after preserving quarantine evidence."},
         {"phase": "Recovery", "status": "VERIFIED" if recovery_verified else "FAILED", "action": f"Restored trusted bytes; SHA-256 match={recovery_verified}; schema validation={validation_status}."},
         {"phase": "Lessons learned", "status": "COMPLETE", "action": scenario["control"]},

@@ -29,6 +29,13 @@
 - The browser dashboard is the implemented presentation prototype. Power BI is an optional alternate tool; the CSV pack can be imported if needed, but a native `.pbix`/`.pbip` is not required or claimed.
 - The server binds to localhost only. Do not expose it to a network.
 
+## Security terminology for the live demo
+
+- **SHA-256 integrity check:** describe this as cryptographic hashing. It produces a one-way digest and detects byte-level changes only when compared with a trusted reference.
+- **Encryption:** do not describe the SHA-256 feature as encryption. The current application does not encrypt/decrypt dataset files and does not implement encryption-key management. Encryption at rest, TLS configuration, and key custody are deployment controls discussed in the threat model, not application features delivered by this prototype.
+- **Threat intelligence:** describe the three MITRE ATT&CK entries as defensive scenario mappings. They are not live threat feeds, indicators of compromise, observed attacks, or actor attribution.
+- **Adversarial comparison:** emphasize that the altered dataset is a controlled classroom simulation, kept separate from the reviewed trusted observations.
+
 ## Offline fallback
 
 Use the screenshots under `evidence/` only if they match the current dashboard version. State that they are static local-prototype captures, not a native Power BI report.

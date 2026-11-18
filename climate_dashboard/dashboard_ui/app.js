@@ -992,8 +992,8 @@ function refreshComparisonFilters() {
 }
 
 function setView(viewId) {
-  const validView = document.querySelector(`#${CSS.escape(viewId)}.view-panel`);
-  if (!validView) return;
+  const validView = document.getElementById(viewId);
+  if (!validView || !validView.classList.contains("view-panel")) return;
   for (const panel of document.querySelectorAll(".view-panel")) {
     panel.hidden = panel !== validView;
   }
@@ -1009,7 +1009,8 @@ async function initialize() {
     setView(event.currentTarget.value);
   });
   const requestedView = window.location.hash.slice(1);
-  const initialView = document.querySelector(`#${CSS.escape(requestedView)}.view-panel`)
+  const requestedPanel = requestedView ? document.getElementById(requestedView) : null;
+  const initialView = requestedPanel?.classList.contains("view-panel")
     ? requestedView
     : "view-summary";
   setView(initialView);

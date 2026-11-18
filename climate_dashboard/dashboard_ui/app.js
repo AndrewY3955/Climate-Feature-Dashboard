@@ -905,7 +905,8 @@ async function initialize() {
   });
 
   try {
-    const response = await fetch("/api/data", { cache: "no-store" });
+    const dataUrl = document.querySelector('meta[name="dashboard-data"]').content;
+    const response = await fetch(dataUrl, { cache: "no-store" });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || `Dashboard data request failed (${response.status}).`);
     dashboardData = payload;

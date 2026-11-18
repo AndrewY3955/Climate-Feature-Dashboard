@@ -58,3 +58,27 @@ jobs:
 
       - name: Run tests
         run: python -m pytest -W error::DeprecationWarning
+
+  required-python-3-11:
+    name: Tests (Python 3.11)
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail when the test matrix fails
+        if: needs.test.result != 'success'
+        run: exit 1
+      - name: Confirm platform test matrix passed
+        run: echo "All configured platform and Python-version tests passed."
+
+  required-python-3-14:
+    name: Tests (Python 3.14)
+    needs: test
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail when the test matrix fails
+        if: needs.test.result != 'success'
+        run: exit 1
+      - name: Confirm platform test matrix passed
+        run: echo "All configured platform and Python-version tests passed."

@@ -1,7 +1,8 @@
 """Run safe, repeatable security and incident-response demonstrations.
 
-Every attack simulation operates on in-memory copies or synthetic fixtures.
-No external system, real credential, production dataset, or network attack is used.
+Each technical attack runs in a short-lived, isolated child process against a
+ disposable lab file. The lab uses temporary copies/synthetic fixtures only;
+no external system, real credential, production dataset, or network target is used.
 """
 
 from __future__ import annotations
@@ -11,6 +12,9 @@ import hashlib
 import io
 import json
 import secrets
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -263,6 +267,7 @@ def _mutate_scenario(scenario_id: str, original: bytes) -> tuple[bytes, str]:
 
 
 def _response_exercise(scenario: dict[str, Any], trusted_bytes: bytes) -> dict[str, Any]:
+    """Execute an attacker child process against a disposable lab file, then defend it."""
     if scenario["mode"] == "tabletop":
         return {
             "status": "TABLETOP ONLY",
@@ -274,59 +279,190 @@ def _response_exercise(scenario: dict[str, Any], trusted_bytes: bytes) -> dict[s
                 for phase, action in RESPONSE_PHASES
             ],
             "recovery_verified": None,
+            "attack_execution": {
+                "mode": "tabletop",
+                "executed": False,
+                "reason": "No authentication service or account-audit telemetry exists in this application.",
+            },
         }
 
-    mutated_bytes, detail = _mutate_scenario(scenario["scenario_id"], trusted_bytes)
-    recovery_baseline = trusted_bytes
+    baseline = trusted_bytes
+    target_name = "target.csv"
     if scenario["mode"] == "visual":
-        recovery_baseline = json.dumps({
+        baseline = json.dumps({
             "view": "environmental-observations",
             "filters": {"year": "all", "metric": "all", "include_water": True},
             "axis": "reported value with unit",
         }, sort_keys=True).encode("utf-8")
-    expected_hash = _sha256(recovery_baseline)
-    actual_hash = _sha256(mutated_bytes)
-    detected = expected_hash != actual_hash
+        target_name = "dashboard-config.json"
 
-    # Keep the entire response exercise in memory. The simulated evidence,
-    # quarantine, eradication, and recovery steps do not need plaintext files
-    # on disk; this also prevents sensitive source material from being written
-    # to temporary storage.
-    working_copy = bytes(mutated_bytes)
-    quarantine_evidence = bytes(working_copy)
-    quarantined = quarantine_evidence == mutated_bytes
-    working_copy = None
-    eradicated = working_copy is None
+    # This child process is the attacker. It has one target path in a temporary
+    # directory, no shell, no network code, and no access to project paths.
+    attacker_script = r'''
+import csv, io, json, pathlib, sys
+scenario, filename = sys.argv[1], pathlib.Path(sys.argv[2])
+original = filename.read_bytes()
+if scenario == "transmitted-payload":
+    changed = original.replace(b"27456000", b"37456000", 1)
+    if changed == original:
+        changed = original + b" "
+    filename.write_bytes(changed)
+    print("Modified one payload byte sequence in the isolated transfer fixture.")
+elif scenario == "visualization-filter":
+    config = json.loads(original.decode("utf-8"))
+    before = config["filters"]["include_water"]
+    config["filters"]["include_water"] = False
+    filename.write_text(json.dumps(config, sort_keys=True), encoding="utf-8")
+    print(f"Changed include_water from {before} to false in the lab configuration.")
+else:
+    stream = io.StringIO(original.decode("utf-8-sig"), newline="")
+    reader = csv.DictReader(stream)
+    fields = reader.fieldnames
+    rows = list(reader)
+    if not fields or not rows:
+        raise SystemExit("Lab CSV is empty or has no header.")
+    if scenario == "stored-value":
+        target = next((r for r in rows if "energy" in r.get("metric", "").lower()), None)
+        if target is None:
+            raise SystemExit("No energy observation available.")
+        before = float(target["value"])
+        target["value"] = str(before * 1.5)
+        detail = f'{target["record_id"]}: value {before:g} -> {float(target["value"]):g}'
+    elif scenario == "stored-omission":
+        removed = [r for r in rows if "water" in r.get("metric", "").lower()]
+        rows = [r for r in rows if "water" not in r.get("metric", "").lower()]
+        if not removed:
+            raise SystemExit("No water observations available.")
+        detail = "Deleted record IDs: " + ", ".join(r.get("record_id", "?") for r in removed)
+    elif scenario == "stored-provenance":
+        target = next((r for r in rows if r.get("record_id") == "OBS005"), rows[0])
+        before = target.get("source_name", "")
+        target["source_name"] = ""
+        detail = f'{target.get("record_id")}: source_name "{before}" -> blank'
+    elif scenario == "stored-scope":
+        target = next((r for r in rows if r.get("record_id") == "OBS001"), rows[0])
+        before = target.get("unit", "")
+        target["unit"] = "kg"
+        detail = f'{target.get("record_id")}: unit "{before}" -> "kg"'
+    else:
+        raise SystemExit("Unknown attack scenario.")
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore", lineterminator="\n")
+    writer.writeheader()
+    writer.writerows(rows)
+    filename.write_bytes(output.getvalue().encode("utf-8"))
+    print(detail)
+'''
+    with tempfile.TemporaryDirectory(prefix="climate-attack-lab-") as temporary:
+        lab_dir = Path(temporary).resolve()
+        target = lab_dir / target_name
+        quarantine = lab_dir / "quarantine.evidence"
+        target.write_bytes(baseline)
+        expected_hash = _sha256(baseline)
 
-    restored_bytes = bytes(recovery_baseline)
-    restored_hash = _sha256(restored_bytes)
-    recovery_verified = restored_hash == expected_hash
+        try:
+            process = subprocess.run(
+                [sys.executable, "-I", "-c", attacker_script, scenario["scenario_id"], str(target)],
+                cwd=lab_dir,
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+                env={"PYTHONIOENCODING": "utf-8"},
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            return {
+                "status": "FAIL",
+                "detected": False,
+                "detail": f"Attacker process could not complete: {exc}",
+                "result": "FAIL — attack execution did not complete.",
+                "phases": [{"phase": "Attack execution", "status": "FAILED", "action": str(exc)}],
+                "recovery_verified": False,
+                "attack_execution": {"mode": "isolated child process", "executed": False, "error": str(exc)},
+            }
 
-    validation_status = "NOT APPLICABLE"
-    if scenario["mode"] == "data":
-        frame = pd.read_csv(io.BytesIO(restored_bytes))
-        source_register = pd.read_csv(SOURCE_REGISTER_FILE)
-        validation_status = validate_dataframe(frame, source_register)["status"]
+        if process.returncode != 0 or not target.is_file():
+            error = (process.stderr or process.stdout or "Attacker process did not modify the lab target.").strip()
+            return {
+                "status": "FAIL",
+                "detected": False,
+                "detail": error,
+                "result": "FAIL — attack process failed; no defensive success is claimed.",
+                "phases": [{"phase": "Attack execution", "status": "FAILED", "action": error}],
+                "recovery_verified": False,
+                "attack_execution": {
+                    "mode": "isolated child process",
+                    "executed": False,
+                    "exit_code": process.returncode,
+                    "stdout": process.stdout.strip(),
+                    "stderr": process.stderr.strip(),
+                },
+            }
 
-    phases = [
-        {"phase": "Preparation", "status": "COMPLETE", "action": "Captured the trusted SHA-256 baseline and record inventory."},
-        {"phase": "Detection and analysis", "status": "DETECTED" if detected else "NOT DETECTED", "action": detail},
-        {"phase": "Containment", "status": "COMPLETE" if quarantined else "FAILED", "action": "Preserved the altered artifact in an isolated in-memory quarantine buffer."},
-        {"phase": "Eradication", "status": "COMPLETE" if eradicated else "FAILED", "action": "Removed the altered working copy after preserving quarantine evidence."},
-        {"phase": "Recovery", "status": "VERIFIED" if recovery_verified else "FAILED", "action": f"Restored trusted bytes; SHA-256 match={recovery_verified}; schema validation={validation_status}."},
-        {"phase": "Lessons learned", "status": "COMPLETE", "action": scenario["control"]},
-    ]
-    return {
-        "status": "PASS" if detected and quarantined and eradicated and recovery_verified and validation_status in ("PASS", "NOT APPLICABLE") else "FAIL",
-        "detected": detected,
-        "detail": detail,
-        "result": scenario["result_basis"] if detected and quarantined and eradicated and recovery_verified and validation_status in ("PASS", "NOT APPLICABLE") else "FAIL — one or more detection, quarantine, eradication, recovery, or validation checks did not pass.",
-        "expected_sha256": expected_hash,
-        "simulated_sha256": actual_hash,
-        "phases": phases,
-        "recovery_verified": recovery_verified,
-        "validation_status": validation_status,
-    }
+        attacked_bytes = target.read_bytes()
+        actual_hash = _sha256(attacked_bytes)
+        detected = actual_hash != expected_hash
+        detail = process.stdout.strip() or "Attacker process modified the isolated target."
+        quarantine.write_bytes(attacked_bytes)
+        quarantine_hash = _sha256(quarantine.read_bytes())
+        quarantined = quarantine_hash == actual_hash
+
+        # Eradicate the compromised working file, then recover from the
+        # independently retained in-process trusted baseline.
+        target.unlink(missing_ok=True)
+        eradicated = not target.exists()
+        target.write_bytes(baseline)
+        restored_hash = _sha256(target.read_bytes())
+        recovery_verified = restored_hash == expected_hash
+
+        validation_status = "NOT APPLICABLE"
+        if scenario["mode"] == "data":
+            frame = pd.read_csv(target)
+            source_register = pd.read_csv(SOURCE_REGISTER_FILE)
+            validation_status = validate_dataframe(frame, source_register)["status"]
+
+        success = (
+            process.returncode == 0
+            and detected
+            and quarantined
+            and eradicated
+            and recovery_verified
+            and validation_status in ("PASS", "NOT APPLICABLE")
+        )
+        phases = [
+            {"phase": "Preparation", "status": "COMPLETE", "action": f"Created disposable target {target_name}; trusted SHA-256={expected_hash}."},
+            {"phase": "Attack execution", "status": "EXECUTED" if process.returncode == 0 else "FAILED", "action": f"Isolated attacker child process exit code {process.returncode}; {detail}"},
+            {"phase": "Detection and analysis", "status": "DETECTED" if detected else "NOT DETECTED", "action": f"Defender compared target SHA-256 {actual_hash} with trusted SHA-256 {expected_hash}."},
+            {"phase": "Containment", "status": "COMPLETE" if quarantined else "FAILED", "action": f"Copied altered target to isolated quarantine evidence; evidence SHA-256={quarantine_hash}."},
+            {"phase": "Eradication", "status": "COMPLETE" if eradicated else "FAILED", "action": "Deleted the altered working target after preserving quarantine evidence."},
+            {"phase": "Recovery", "status": "VERIFIED" if recovery_verified else "FAILED", "action": f"Restored trusted baseline; digest match={recovery_verified}; schema validation={validation_status}."},
+            {"phase": "Lessons learned", "status": "COMPLETE", "action": scenario["control"]},
+        ]
+        return {
+            "status": "PASS" if success else "FAIL",
+            "detected": detected,
+            "detail": detail,
+            "result": scenario["result_basis"] if success else "FAIL — attack, detection, quarantine, eradication, recovery, or validation did not pass.",
+            "expected_sha256": expected_hash,
+            "simulated_sha256": actual_hash,
+            "phases": phases,
+            "recovery_verified": recovery_verified,
+            "validation_status": validation_status,
+            "attack_execution": {
+                "mode": "isolated child process",
+                "executed": process.returncode == 0,
+                "exit_code": process.returncode,
+                "target": target_name,
+                "before_sha256": expected_hash,
+                "after_sha256": actual_hash,
+                "quarantine_sha256": quarantine_hash,
+                "recovery_sha256": restored_hash,
+                "stdout": process.stdout.strip(),
+                "stderr": process.stderr.strip(),
+                "network_access": "not used",
+                "scope": "disposable temporary directory only",
+            },
+        }
 
 
 def run_security_demo() -> dict[str, Any]:

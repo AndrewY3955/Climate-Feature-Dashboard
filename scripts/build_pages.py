@@ -3,11 +3,9 @@
 import argparse
 import json
 import shutil
-import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
 
 from climate_dashboard.adversarial import create_adversarial_copy
 from climate_dashboard.dashboard import load_dashboard_data

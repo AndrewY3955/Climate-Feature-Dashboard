@@ -3,14 +3,17 @@
 import argparse
 import json
 import shutil
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 from climate_dashboard.adversarial import create_adversarial_copy
 from climate_dashboard.dashboard import load_dashboard_data
 from climate_dashboard.pipeline import run_pipeline
 from climate_dashboard.powerbi_export import build_powerbi_pack
 
-ROOT = Path(__file__).resolve().parents[1]
 UI_DIR = ROOT / "climate_dashboard" / "dashboard_ui"
 REVIEWED_DIR = ROOT / "data" / "processed" / "reviewed"
 

@@ -1008,6 +1008,11 @@ async function initialize() {
   document.querySelector("#screen-selector").addEventListener("change", (event) => {
     setView(event.currentTarget.value);
   });
+  window.addEventListener("hashchange", () => {
+    const hashView = window.location.hash.slice(1);
+    const hashPanel = hashView ? document.getElementById(hashView) : null;
+    setView(hashPanel?.classList.contains("view-panel") ? hashView : "view-summary");
+  });
   const requestedView = window.location.hash.slice(1);
   const requestedPanel = requestedView ? document.getElementById(requestedView) : null;
   const initialView = requestedPanel?.classList.contains("view-panel")

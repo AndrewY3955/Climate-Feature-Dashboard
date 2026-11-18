@@ -56,6 +56,12 @@ The launcher prepares the data, starts the local server, and opens the dashboard
 
 The dashboard is local-only and is intended for use in a browser on the same computer. See the [dashboard guide](docs/dashboard_local.md) for troubleshooting and optional shell shortcuts.
 
+## Public GitHub Pages demo
+
+The dashboard is also published as a static site at [the GitHub Pages demo](https://andrewy3955.github.io/Climate-Feature-Dashboard/). The Pages workflow regenerates the reviewed dataset, adversarial example, and Power BI context pack, verifies the trusted-data manifest, and publishes the browser assets plus a read-only JSON data snapshot. The static build stops instead of publishing if reviewed-data validation or SHA-256 verification fails.
+
+GitHub Pages does not run the Python server or regenerate data in a visitor's browser. The public demo is a snapshot refreshed by a successful deployment from `main`; use the local launcher above when working with or regenerating the Python-backed project. The local-only API and loopback security boundary remain unchanged.
+
 ## How the data workflow works
 
 1. Register sources and record-level observations, including source locators and original units.

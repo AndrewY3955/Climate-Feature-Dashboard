@@ -74,9 +74,9 @@ if ($Major -lt 3 -or ($Major -eq 3 -and $Minor -lt 10)) {
     throw ".venv uses $VersionOutput; Python 3.10 or newer is required. Recreate .venv with a supported interpreter."
 }
 
-$PandasAvailable = & $Python -c "import importlib.util; raise SystemExit(0 if importlib.util.find_spec('pandas') else 1)"
+$DependenciesAvailable = & $Python -c "import importlib.util; modules = ('pandas', 'cryptography'); raise SystemExit(0 if all(importlib.util.find_spec(name) for name in modules) else 1)"
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Installing project dependencies from requirements.txt..."
+    Write-Host "Installing or repairing project dependencies from requirements.txt..."
     & $Python -m pip install -r (Join-Path $ProjectRoot "requirements.txt")
     if ($LASTEXITCODE -ne 0) {
         throw "Dependency installation failed. Check Python/pip availability and retry."

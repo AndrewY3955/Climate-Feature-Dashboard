@@ -9,9 +9,9 @@
 5. **Security demonstration:** A standalone AES-256-GCM file-encryption utility uses scrypt-derived keys and authenticates ciphertext. It is separate from dashboard storage/transport and has automated wrong-passphrase and tamper tests.
 6. **Final report and dashboard presentation:** The 31-section report, dashboard-screen demo runbook, and six existing browser screenshots are present. A separate 8–10 minute presentation outline now covers all required topics and all five papers. No slide deck or recording has been generated.
 
-## Remaining handoff checks
+## Handoff status and remaining limitations
 
 - The project owner has certified the five selected papers as eligible. The seven-record source-backed dataset is complete for the declared proof-of-concept scope; do not expand it with unverified or incomparable data. Add records only if the assignment requires broader coverage and suitable sources are reviewed.
 - Final tests passed: 45 tests across Ubuntu Python 3.10–3.14, Windows Python 3.11, and macOS Python 3.11. Dependency security audit, CodeQL, and GitHub Pages static build also passed; the PR publish step was skipped, so production Pages remains unchanged.
-- Non-x86 CPU/platform combinations were not individually tested. The local service remains loopback-only by design.
+- These changes remain on the open QA pull request and are not yet merged into main; the production GitHub Pages site is therefore unchanged.\n- Non-x86 CPU/platform combinations were not individually tested. The local service remains loopback-only by design.
 - The interactive browser dashboard fulfills the dashboard requirement. A native Power BI report is optional unless specifically required by the instructor; the CSV export is available as an alternate workflow.

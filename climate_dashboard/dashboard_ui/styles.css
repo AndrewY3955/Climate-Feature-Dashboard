@@ -691,3 +691,64 @@ tr:last-child td {
 .manipulation-analysis p:last-child {
   margin-bottom: 0;
 }
+
+
+/* Keyboard focus and narrow-screen usability */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid #075b72;
+  outline-offset: 3px;
+}
+
+.table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-gutter: stable;
+}
+
+.table-scroll:focus-visible {
+  outline: 3px solid #075b72;
+  outline-offset: 2px;
+}
+
+.context-card,
+.table-card,
+.chart-card,
+.notice,
+.integrity-card,
+.summary-card {
+  min-width: 0;
+}
+
+.context-card a,
+.source-link a {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 420px) {
+  .header-inner,
+  .page-shell {
+    width: calc(100% - 1rem);
+  }
+
+  .filters,
+  .filters-wide {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .screen-picker select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .detail-grid,
+  .context-card-grid,
+  .dashboard-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .hash-value {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}

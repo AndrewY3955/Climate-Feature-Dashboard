@@ -378,13 +378,46 @@ function renderOverview() {
   );
 }
 
-function renderRecords() {
+function filteredTrustedRecords() {
   const query = document.querySelector("#record-search").value.trim().toLocaleLowerCase();
   const sourceId = document.querySelector("#records-source-filter").value;
-  const records = dashboardData.trusted.filter((record) =>
+  return dashboardData.trusted.filter((record) =>
     (!sourceId || record.source_id === sourceId)
     && (!query || Object.values(record).some((value) => String(value).toLocaleLowerCase().includes(query)))
   );
+}
+
+function csvCell(value) {
+  let text = value === null || value === undefined ? "" : String(value);
+  if (typeof value === "string" && /^[=+@-]/.test(value)) text = `'${text}`;
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function downloadCsv(filename, rows) {
+  if (!rows.length) return false;
+  const columns = Object.keys(rows[0]);
+  const csv = [
+    columns.map(csvCell).join(","),
+    ...rows.map((row) => columns.map((column) => csvCell(row[column])).join(",")),
+  ].join("\r\n");
+  const blob = new Blob(["\\uFEFF", csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.hidden = true;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return true;
+}
+
+function renderRecords() {
+  const records = filteredTrustedRecords();
+  const sourceId = document.querySelector("#records-source-filter").value;
+  const query = document.querySelector("#record-search").value.trim();
+  document.querySelector("#download-records-csv").disabled = records.length === 0;
   document.querySelector("#records-result-count").textContent =
     `Showing ${records.length} of ${dashboardData.trusted.length} trusted records${sourceId ? ` for ${sourceId}` : ""}${query ? ` matching “${query}”` : ""}.`;
   renderTable(
@@ -1113,6 +1146,13 @@ async function initialize() {
     document.querySelector("#comparison-value-basis").addEventListener("change", renderComparison);
     document.querySelector("#record-search").addEventListener("input", renderRecords);
     document.querySelector("#records-source-filter").addEventListener("change", renderRecords);
+    document.querySelector("#download-records-csv").addEventListener("click", () => {
+      const records = filteredTrustedRecords();
+      if (downloadCsv("trusted-records-filtered.csv", records)) {
+        document.querySelector("#records-result-count").textContent += " CSV download started.";
+      }
+    });
+    document.querySelector("#print-current-view").addEventListener("click", () => window.print());
     document.querySelector("#guide-metric").addEventListener("change", renderMeasureGuide);
     document.querySelector("#context-type-filter").addEventListener("change", refreshContextOptions);
     document.querySelector("#context-item-filter").addEventListener("change", renderDataContext);

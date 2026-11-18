@@ -2,6 +2,53 @@
 
 This outline maps the assignment's presentation requirements to a concise, reproducible live demonstration. It is a speaker outline, not a claim that a slide deck or recording already exists.
 
+## Security demonstration results: findings and interpretation
+
+Use this section when presenting the one-click Security Demo Center output. These are the reported results from the demonstrated run; rerun the local demonstration before quoting them as the result of a later build.
+
+### Execution summary
+
+| Result | Reported value | Correct interpretation |
+|---|---:|---|
+| Overall demonstration | PASS | Every automated check and technical scenario in this run completed successfully. This is not a certification that the whole application is secure. |
+| Trusted records | 7 | Seven reviewed records were included in the integrity and validation checks. |
+| Security control tests | 6 / 6 passed | The listed dataset, digest, encryption, fresh-parameter, wrong-passphrase, and ciphertext-tampering checks passed. |
+| Scenarios | 7 | Six technical simulations and one tabletop exercise were run. |
+| Technical scenarios | 6 passed | The six controlled data/payload/configuration exercises produced the expected detection and recovery results. |
+| Tabletop-only scenarios | 1 | Valid Accounts (T1078) was discussed and its response workflow exercised; no account-compromise detection was tested. |
+| Incident-response phases | 6 per scenario | Preparation, Detection and Analysis, Containment, Eradication, Recovery, and Lessons Learned were represented in each scenario workflow. |
+| Pairwise comparisons | 21 | Seven records produce 7 × 6 ÷ 2 = 21 unique pairs. All 21 were classified NOT COMPARABLE by the current rules. |
+
+### What the six security tests establish
+
+- **Schema and source validation — PASS:** the seven-record trusted dataset produced zero validation errors and zero warnings in this run. This checks the implemented schema and source rules; it does not independently validate the truth of the source reports.
+- **SHA-256 manifest — PASS:** the actual digest matched the expected digest for the trusted file. SHA-256 is an integrity hash, not encryption. The comparison is only as trustworthy as the separately protected reference digest; a writable manifest stored beside writable data is not an independent trust anchor.
+- **AES-256-GCM — PASS:** the standalone demonstration encrypted a temporary in-memory copy and recovered identical bytes after authenticated decryption. It did not encrypt dashboard storage, GitHub Pages, or network traffic.
+- **Fresh salt and nonce — PASS:** two encryptions of the same input produced different salt/nonce headers, as expected for the demonstration.
+- **Wrong passphrase — PASS:** authenticated decryption rejected the incorrect passphrase and did not return unauthenticated plaintext.
+- **Ciphertext tampering — PASS:** changing one ciphertext byte caused AES-GCM authentication to fail.
+
+### How to explain the seven scenarios
+
+- **T1078 — Compromised contributor account (TABLETOP ONLY):** the scenario assumes an identity is compromised. The project has no login, MFA, authorization, or account-audit service, so it does not technically detect account compromise. The six response phases are a classroom walkthrough.
+- **T1565.001 — Stored Data Manipulation:** four exercises alter a copied value, omit water records, remove source attribution, or change a unit. A fifth changes a synthetic visualization-filter configuration. They demonstrate why record-level baselines, provenance, unit/scope validation, and filter review matter.
+- **T1565.002 — Transmitted Data Manipulation:** the transfer exercise changes bytes in a simulated payload and checks it against the sender-side digest. It is not a live network interception or transport-security test.
+- **Recovery:** for the technical scenarios, altered working data is held in an in-memory quarantine buffer, discarded, and replaced with trusted bytes. A matching restored digest and applicable schema validation show that this simulated recovery path worked; this is not a production backup/restore test.
+
+### Comparability finding: 0 direct, 0 conditional, 21 not comparable
+
+The audit compares every unique pair among seven observations. It requires matching metric and unit, then evaluates data year, geography, facility/organizational scope, lifecycle boundary, calculation method, and data status. Company identity may differ. The reported run found metric and/or unit mismatches in every pair, so no pair reached DIRECTLY COMPARABLE or CONDITIONAL.
+
+**Say:** “The current seven-record dataset does not contain a like-for-like pair under our comparison rules. The dashboard therefore avoids presenting these unlike observations as a fair ranking.”
+
+Do not say that the 21 results mean the audit failed, that the observations are invalid, or that no semiconductor companies can ever be compared. The result describes this dataset and the implemented comparison criteria. A larger dataset with aligned metrics, units, years, geography, scope, boundaries, methods, and status could produce comparable pairs.
+
+### Simulation boundary and residual controls
+
+All scenario changes use temporary copies or synthetic in-memory settings; the trusted dataset is not modified. These are defensive classroom exercises, not live attacks, penetration tests, a production SOC, or a live threat feed. ATT&CK IDs are static technique references, not evidence of attribution or live detection.
+
+The prototype does not deploy MFA, role-based access enforcement, central account/audit logging, independent manifest custody, production key management, immutable backups, or automated production recovery. AES-GCM is a standalone file demonstration. SHA-256 detects a difference only against a separately trusted reference.
+
 ## Recommended 8–10 minute sequence
 
 | Slide / segment | Time | Required content | Evidence and speaker notes |

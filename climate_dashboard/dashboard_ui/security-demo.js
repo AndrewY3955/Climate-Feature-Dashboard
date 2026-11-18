@@ -99,10 +99,6 @@ function renderScenarios(items) {
       }
       card.append(phases);
     }
-    const control = document.createElement("p");
-    control.className = "control-note";
-    control.textContent = "Defensive control: " + scenario.control;
-    card.append(control);
     list.append(card);
   }
 }

@@ -67,9 +67,21 @@ function renderScenarios(items) {
     mapping.textContent = scenario.technique_id + " · " + scenario.technique_name;
     const description = document.createElement("p");
     description.textContent = scenario.description;
+    const vector = document.createElement("p");
+    vector.className = "scenario-evidence";
+    vector.textContent = "ATTACK VECTOR: " + (scenario.attack_vector || "Not specified");
+    const changed = document.createElement("p");
+    changed.className = "scenario-evidence";
+    changed.textContent = "WHAT CHANGED: " + (scenario.simulated_change || "No technical change; tabletop assumption.");
     const detail = document.createElement("p");
-    detail.textContent = scenario.detail || scenario.detection;
-    card.append(mapping, description, detail);
+    detail.textContent = "OBSERVED DEMO EVIDENCE: " + (scenario.detail || scenario.detection || "No technical detection was performed.");
+    const defense = document.createElement("p");
+    defense.className = "control-note";
+    defense.textContent = "DEFENSE USED / CONTROL: " + (scenario.defense_used || scenario.control);
+    const outcome = document.createElement("p");
+    outcome.className = "scenario-result";
+    outcome.textContent = "RESULT: " + (scenario.result || scenario.result_basis || scenario.status);
+    card.append(mapping, description, vector, changed, detail, defense, outcome);
     if (scenario.phases?.length) {
       const phaseTitle = document.createElement("h5");
       phaseTitle.textContent = "Incident-response phases";

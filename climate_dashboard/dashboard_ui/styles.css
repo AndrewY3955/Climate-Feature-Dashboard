@@ -638,3 +638,33 @@ tr:last-child td {
     grid-row: 1;
   }
 }
+
+
+/* Environmental feature coverage */
+#feature-coverage-table {
+  min-width: 58rem;
+}
+
+#feature-coverage-table td:nth-child(2) {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+#feature-coverage-table td:nth-child(4),
+#feature-coverage-table td:nth-child(5) {
+  min-width: 17rem;
+}
+
+#feature-coverage-summary .summary-card {
+  min-width: 0;
+}
+
+@media (max-width: 600px) {
+  #feature-coverage-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #feature-coverage-table {
+    min-width: 52rem;
+  }
+}

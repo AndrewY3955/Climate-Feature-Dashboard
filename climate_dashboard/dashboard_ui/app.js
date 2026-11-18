@@ -992,17 +992,27 @@ function refreshComparisonFilters() {
 }
 
 function setView(viewId) {
+  const validView = document.querySelector(`#${CSS.escape(viewId)}.view-panel`);
+  if (!validView) return;
   for (const panel of document.querySelectorAll(".view-panel")) {
-    panel.hidden = panel.id !== viewId;
+    panel.hidden = panel !== validView;
   }
   const screenSelector = document.querySelector("#screen-selector");
   if (screenSelector.value !== viewId) screenSelector.value = viewId;
+  if (window.location.hash !== `#${viewId}`) {
+    window.history.replaceState(null, "", `#${viewId}`);
+  }
 }
 
 async function initialize() {
   document.querySelector("#screen-selector").addEventListener("change", (event) => {
     setView(event.currentTarget.value);
   });
+  const requestedView = window.location.hash.slice(1);
+  const initialView = document.querySelector(`#${CSS.escape(requestedView)}.view-panel`)
+    ? requestedView
+    : "view-summary";
+  setView(initialView);
 
   try {
     const dataUrl = document.querySelector('meta[name="dashboard-data"]').content;

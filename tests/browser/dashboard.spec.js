@@ -203,7 +203,10 @@ test("mobile, tablet, and desktop layouts do not overflow the viewport", async (
             };
           })
           .filter((element) => element.right > window.innerWidth + 1 || element.left < -1)
-          .slice(0, 12),
+          .filter((element) => !document.querySelector(".table-scroll")?.contains(
+            document.getElementById(element.id) || null
+          ))
+          .slice(0, 20),
       }));
       expect(dimensions.document, `${viewId} at ${viewport.width}px; ${JSON.stringify(dimensions.offenders)}`).toBeLessThanOrEqual(dimensions.viewport);
       expect(dimensions.body, `${viewId} at ${viewport.width}px; ${JSON.stringify(dimensions.offenders)}`).toBeLessThanOrEqual(dimensions.viewport);

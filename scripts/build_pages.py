@@ -62,6 +62,7 @@ def build_site() -> dict:
         shutil.copy2(UI_DIR / asset, OUTPUT_DIR / asset)
 
     security_html = (UI_DIR / "security-demo.html").read_text(encoding="utf-8")
+    security_html = security_html.replace('<html lang="en">', '<html lang="en" data-demo-mode="read-only">')
     security_html = security_html.replace('href="/security-demo.css"', 'href="./security-demo.css"')
     security_html = security_html.replace('src="/security-demo.js"', 'src="./security-demo.js"')
     (OUTPUT_DIR / "security-demo.html").write_text(security_html, encoding="utf-8")

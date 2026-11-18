@@ -1,2 +1,2 @@
 pandas>=2.1,<4.0
-cryptography>=42,<47
+cryptography>=50,<51

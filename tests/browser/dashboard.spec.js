@@ -292,3 +292,10 @@ test("visible views pass automated WCAG 2.1 AA accessibility checks", async ({ b
     await context.close();
   }
 });
+
+test("GitHub Pages preview exposes the Security Demo Center as read-only", async ({ page }) => {
+  await page.goto("http://127.0.0.1:8766/security-demo.html");
+  await expect(page.getByRole("heading", { name: "Security Demo Center" })).toBeVisible();
+  await expect(page.locator("#run-all")).toBeDisabled();
+  await expect(page.locator("#run-status")).toContainText("GitHub Pages copy is read-only");
+});

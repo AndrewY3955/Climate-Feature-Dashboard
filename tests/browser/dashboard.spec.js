@@ -301,7 +301,7 @@ test("Security Demo Center runs the full security and incident-response demonstr
     if (message.type() === "error") errors.push(message.text());
   });
   await page.locator("a.demo-link").click();
-  await expect(page).toHaveURL(/security-demo\\.html$/);
+  await expect(page).toHaveURL(/security-demo\.html$/);
   await expect(page.getByRole("heading", { name: "Security Demo Center" })).toBeVisible();
   await expect(page.locator("#run-all")).toBeEnabled();
   await page.locator("#run-all").click();

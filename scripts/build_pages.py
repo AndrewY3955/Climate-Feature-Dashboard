@@ -1,6 +1,5 @@
 """Build a static, GitHub Pages-compatible copy of the reviewed dashboard."""
 
-import argparse
 import json
 import shutil
 from pathlib import Path
@@ -16,10 +15,12 @@ UI_DIR = ROOT / "climate_dashboard" / "dashboard_ui"
 REVIEWED_DIR = ROOT / "data" / "processed" / "reviewed"
 
 
-def build_site(output_dir: Path) -> dict:
-    """Regenerate reviewed outputs and assemble a static dashboard directory."""
-    output_dir = Path(output_dir).resolve()
-    output_dir.mkdir(parents=True, exist_ok=True)
+OUTPUT_DIR = ROOT / "site"
+
+
+def build_site() -> dict:
+    """Regenerate reviewed outputs and assemble the static dashboard directory."""
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     pipeline = run_pipeline(
         input_file=ROOT / "data" / "intake" / "observations_template.csv",
@@ -55,23 +56,23 @@ def build_site(output_dir: Path) -> dict:
     if 'href="./styles.css"' not in html or 'src="./app.js"' not in html:
         raise RuntimeError("Dashboard HTML asset paths could not be made Pages-compatible.")
 
-    (output_dir / "index.html").write_text(html, encoding="utf-8")
+    (OUTPUT_DIR / "index.html").write_text(html, encoding="utf-8")
     for asset in ("styles.css", "app.js"):
         shutil.copy2(UI_DIR / asset, output_dir / asset)
 
-    (output_dir / "data.json").write_text(
+    (OUTPUT_DIR / "data.json").write_text(
         json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
         encoding="utf-8",
     )
-    (output_dir / ".nojekyll").write_text("", encoding="utf-8")
+    (OUTPUT_DIR / ".nojekyll").write_text("", encoding="utf-8")
 
     required = ("index.html", "styles.css", "app.js", "data.json", ".nojekyll")
-    missing = [name for name in required if not (output_dir / name).is_file()]
+    missing = [name for name in required if not (OUTPUT_DIR / name).is_file()]
     if missing:
         raise RuntimeError(f"Static dashboard build is incomplete: {', '.join(missing)}")
 
     return {
-        "output_dir": str(output_dir),
+        "output_dir": str(OUTPUT_DIR),
         "record_count": len(payload["trusted"]),
         "validation": payload["validation"]["status"],
         "integrity_verified": payload["integrity"]["verified"],
@@ -80,17 +81,7 @@ def build_site(output_dir: Path) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Build the static dashboard used by GitHub Pages."
-    )
-    parser.add_argument(
-        "--output-dir",
-        type=Path,
-        default=ROOT / "site",
-        help="Directory for the generated static site (default: ./site).",
-    )
-    args = parser.parse_args()
-    result = build_site(args.output_dir)
+    result = build_site()
     print(
         "Static dashboard build complete: "
         f"{result['record_count']} reviewed records; "

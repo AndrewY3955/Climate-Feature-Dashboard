@@ -922,6 +922,49 @@ function renderComparison() {
       details.append(item);
     }
     card.append(heading, details);
+    const interpretation = {
+      "ADV-001": {
+        unnoticed: "A plausible-looking numeric value can pass a casual visual review when the reader does not open the source record or compare the trusted version.",
+        conclusion: "The displayed total energy demand is overstated by 50%; this is a fabricated scenario value, not a real-world change.",
+        trust: "A mismatch between the report and its cited source undermines confidence in the dashboard and its review process.",
+        detect: "Compare the record-level value and SHA-256 digest with an independently protected trusted baseline; inspect the manipulation log.",
+        prevent: "Restrict write access, require second-person review, preserve versioned source records, and protect the reference manifest separately.",
+        evidence: "Trusted and adversarial CSVs, source PDF page 120, file hashes, Git/version history, approval records, and platform audit logs."
+      },
+      "ADV-002": {
+        unnoticed: "The source URL and source ID remain present, so a table may look mostly intact even though the human-readable publisher/report label has disappeared.",
+        conclusion: "The numeric value is unchanged, but the evidence becomes harder to interpret and verify quickly.",
+        trust: "Missing attribution weakens traceability and can make a valid observation appear unsupported.",
+        detect: "Validate required source labels and compare source metadata with the source register and trusted record.",
+        prevent: "Require complete provenance fields, reject or flag blank source labels, and review metadata changes before publication.",
+        evidence: "Before/after record diff, source register, validation warning, source PDF, and approved change record."
+      },
+      "ADV-003": {
+        unnoticed: "A filtered or simplified view can omit an entire category; readers may mistake the absence of water records for an absence of water impact.",
+        conclusion: "All three water observations disappear, shifting attention toward energy and emissions and hiding water-related resource demand.",
+        trust: "Selective omission can create a materially incomplete environmental narrative even when remaining values are unchanged.",
+        detect: "Compare record IDs, row counts, and required-feature coverage against the trusted baseline; inspect filters and the change log.",
+        prevent: "Maintain a feature-coverage register, require review of omissions and filters, and prevent the adversarial copy from replacing trusted data.",
+        evidence: "Trusted/adversarial CSV diff, expected metric inventory, dashboard filter settings, screenshots, change log, and repository history."
+      }
+    }[change.change_id];
+    if (interpretation) {
+      const analysis = make("div", "manipulation-analysis");
+      analysis.append(make("h5", "", "Interpretation and response analysis"));
+      for (const [label, value] of [
+        ["Why it may go unnoticed", interpretation.unnoticed],
+        ["Effect on climate conclusion", interpretation.conclusion],
+        ["Effect on user trust", interpretation.trust],
+        ["Detection control", interpretation.detect],
+        ["Prevention control", interpretation.prevent],
+        ["Incident-response evidence", interpretation.evidence],
+      ]) {
+        const item = make("p", "", "");
+        item.append(make("strong", "", label + ": "), document.createTextNode(value));
+        analysis.append(item);
+      }
+      card.append(analysis);
+    }
     changeLog.append(card);
   }
 }

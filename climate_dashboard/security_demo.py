@@ -11,8 +11,6 @@ import hashlib
 import io
 import json
 import secrets
-import shutil
-import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -254,29 +252,25 @@ def _response_exercise(scenario: dict[str, Any], trusted_bytes: bytes) -> dict[s
     actual_hash = _sha256(mutated_bytes)
     detected = expected_hash != actual_hash
 
-    with tempfile.TemporaryDirectory(prefix="climate-security-demo-") as temp_name:
-        temp = Path(temp_name)
-        trusted_path = temp / "trusted-baseline.csv"
-        working_path = temp / "working-copy.bin"
-        quarantine_path = temp / "quarantine-evidence.bin"
-        restored_path = temp / "recovered-copy.csv"
-        trusted_path.write_bytes(trusted_bytes)
-        working_path.write_bytes(mutated_bytes)
+    # Keep the entire response exercise in memory. The simulated evidence,
+    # quarantine, eradication, and recovery steps do not need plaintext files
+    # on disk; this also prevents sensitive source material from being written
+    # to temporary storage.
+    working_copy = bytes(mutated_bytes)
+    quarantine_evidence = bytes(working_copy)
+    quarantined = quarantine_evidence == mutated_bytes
+    working_copy = None
+    eradicated = working_copy is None
 
-        shutil.copy2(working_path, quarantine_path)
-        quarantined = quarantine_path.read_bytes() == mutated_bytes
-        working_path.unlink()
-        eradicated = not working_path.exists()
+    restored_bytes = bytes(trusted_bytes)
+    restored_hash = _sha256(restored_bytes)
+    recovery_verified = restored_hash == expected_hash
 
-        shutil.copy2(trusted_path, restored_path)
-        restored_hash = sha256_file(restored_path)
-        recovery_verified = restored_hash == expected_hash
-
-        validation_status = "NOT APPLICABLE"
-        if scenario["mode"] == "data":
-            frame = pd.read_csv(restored_path)
-            source_register = pd.read_csv(SOURCE_REGISTER_FILE)
-            validation_status = validate_dataframe(frame, source_register)["status"]
+    validation_status = "NOT APPLICABLE"
+    if scenario["mode"] == "data":
+        frame = pd.read_csv(io.BytesIO(restored_bytes))
+        source_register = pd.read_csv(SOURCE_REGISTER_FILE)
+        validation_status = validate_dataframe(frame, source_register)["status"]
 
     phases = [
         {"phase": "Preparation", "status": "COMPLETE", "action": "Captured the trusted SHA-256 baseline and record inventory."},

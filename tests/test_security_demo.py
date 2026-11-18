@@ -51,16 +51,7 @@ def test_full_security_demo_passes_without_modifying_trusted_data():
     result = run_security_demo()
     after = _sha256(TRUSTED_FILE.read_bytes())
 
-    assert result["status"] == "PASS", {
-        "tests": result["tests"],
-        "scenarios": [
-            {
-                key: item.get(key)
-                for key in ("scenario_id", "status", "detail", "validation_status", "phases")
-            }
-            for item in result["scenarios"]
-        ],
-    }
+    assert result["status"] == "PASS", "Security checks: " + str(result["tests"]) + "; scenarios: " + str([(item["scenario_id"], item["status"], item.get("validation_status"), item.get("detail")) for item in result["scenarios"]])
     assert before == after
     assert len(result["scenarios"]) == len(SCENARIO_CATALOG)
     assert all(

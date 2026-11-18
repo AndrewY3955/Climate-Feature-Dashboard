@@ -55,14 +55,16 @@ jobs:
       - name: Install browser engines
         run: npx playwright install --with-deps ${{ matrix.browser }}
 
-      - name: Start static dashboard
+      - name: Start local dashboard API and static GitHub Pages preview
         run: |
-          python -m http.server 8765 --directory site > /tmp/dashboard.log 2>&1 &
+          python -m climate_dashboard.dashboard --port 8765 > /tmp/dashboard.log 2>&1 &
+          python -m http.server 8766 --directory site > /tmp/pages-preview.log 2>&1 &
           for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:8765/ > /dev/null; then exit 0; fi
+            if curl --fail --silent http://127.0.0.1:8765/ > /dev/null && curl --fail --silent http://127.0.0.1:8766/security-demo.html > /dev/null; then exit 0; fi
             sleep 1
           done
           cat /tmp/dashboard.log
+          cat /tmp/pages-preview.log
           exit 1
 
       - name: Run cross-browser functional, responsive, keyboard, console, and WCAG checks

@@ -94,6 +94,8 @@ Synthetic test data and manipulated records are separate from the reviewed obser
 - [Data dictionary](docs/data_dictionary.md)
 - [Source collection guide](docs/collecting_sources_and_data.md)
 - [Requirement traceability](docs/requirement_traceability.md)
+- [Environmental feature coverage register](docs/environmental_feature_coverage.md)
+- [Presentation outline](docs/presentation_outline.md)
 
 **Dashboard and security**
 - [Dashboard setup and views](docs/dashboard_local.md)

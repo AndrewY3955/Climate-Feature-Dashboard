@@ -293,6 +293,30 @@ test("visible views pass automated WCAG 2.1 AA accessibility checks", async ({ b
   }
 });
 
+
+test("Security Demo Center runs the full security and incident-response demonstration", async ({ page }) => {
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") errors.push(message.text());
+  });
+  await page.locator("a.demo-link").click();
+  await expect(page).toHaveURL(/security-demo\\.html$/);
+  await expect(page.getByRole("heading", { name: "Security Demo Center" })).toBeVisible();
+  await expect(page.locator("#run-all")).toBeEnabled();
+  await page.locator("#run-all").click();
+  await expect(page.locator("#run-status")).toContainText("Complete:", { timeout: 30000 });
+  await expect(page.locator("#results")).toBeVisible();
+  await expect(page.locator("#summary .summary-card")).toHaveCount(7);
+  await expect(page.locator("#tests-table tbody tr")).toHaveCount(6);
+  await expect(page.locator("#scenario-list .scenario-card")).toHaveCount(7);
+  await expect(page.locator("#scenario-list .phase-list li")).toHaveCount(42);
+  await expect(page.locator("#comparison-table tbody tr")).toHaveCount(21);
+  await expect(page.locator("#scenario-list")).toContainText("TABLETOP ONLY");
+  await expect(page.locator("#limitations")).toContainText("not a penetration test");
+  expect(errors).toEqual([]);
+});
+
 test("GitHub Pages preview exposes the Security Demo Center as read-only", async ({ page }) => {
   await page.goto("http://127.0.0.1:8766/security-demo.html");
   await expect(page.getByRole("heading", { name: "Security Demo Center" })).toBeVisible();

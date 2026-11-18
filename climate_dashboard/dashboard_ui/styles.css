@@ -668,3 +668,26 @@ tr:last-child td {
     min-width: 52rem;
   }
 }
+
+
+.manipulation-analysis {
+  margin-top: 0.9rem;
+  padding: 0.85rem;
+  border-left: 4px solid var(--amber);
+  border-radius: 0.4rem;
+  background: #fff8eb;
+}
+
+.manipulation-analysis h5 {
+  margin: 0 0 0.6rem;
+  color: var(--navy);
+  font-size: 0.95rem;
+}
+
+.manipulation-analysis p {
+  margin: 0 0 0.55rem;
+}
+
+.manipulation-analysis p:last-child {
+  margin-bottom: 0;
+}

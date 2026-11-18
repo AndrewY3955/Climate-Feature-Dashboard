@@ -400,7 +400,7 @@ function downloadCsv(filename, rows) {
     columns.map(csvCell).join(","),
     ...rows.map((row) => columns.map((column) => csvCell(row[column])).join(",")),
   ].join("\r\n");
-  const blob = new Blob(["\\uFEFF", csv], { type: "text/csv;charset=utf-8" });
+  const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;

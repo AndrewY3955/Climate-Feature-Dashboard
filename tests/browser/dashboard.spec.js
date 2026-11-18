@@ -187,9 +187,26 @@ test("mobile, tablet, and desktop layouts do not overflow the viewport", async (
         viewport: window.innerWidth,
         document: document.documentElement.scrollWidth,
         body: document.body.scrollWidth,
+        offenders: Array.from(document.querySelectorAll("body *"))
+          .map((element) => {
+            const rect = element.getBoundingClientRect();
+            return {
+              tag: element.tagName,
+              id: element.id,
+              className: typeof element.className === "string" ? element.className : "",
+              left: Math.round(rect.left),
+              right: Math.round(rect.right),
+              width: Math.round(rect.width),
+              scrollWidth: element.scrollWidth,
+              clientWidth: element.clientWidth,
+              overflowX: getComputedStyle(element).overflowX,
+            };
+          })
+          .filter((element) => element.right > window.innerWidth + 1 || element.left < -1)
+          .slice(0, 12),
       }));
-      expect(dimensions.document, `${viewId} at ${viewport.width}px`).toBeLessThanOrEqual(dimensions.viewport);
-      expect(dimensions.body, `${viewId} at ${viewport.width}px`).toBeLessThanOrEqual(dimensions.viewport);
+      expect(dimensions.document, `${viewId} at ${viewport.width}px; ${JSON.stringify(dimensions.offenders)}`).toBeLessThanOrEqual(dimensions.viewport);
+      expect(dimensions.body, `${viewId} at ${viewport.width}px; ${JSON.stringify(dimensions.offenders)}`).toBeLessThanOrEqual(dimensions.viewport);
     }
   }
 });

@@ -24,6 +24,8 @@ flowchart LR
     P -. "hash comparison against protected reference" .-> Q
 ```
 
+The repository also contains a standalone AES-256-GCM file-encryption demonstration (`scripts/encryption_demo.py`). It is deliberately outside the dashboard data-flow path: it reads a user-selected input file and writes a separate authenticated-encryption container. The dashboard does not call this utility, and no dashboard storage, GitHub Pages content, or network connection is encrypted by this demonstration. See [encryption_demo.md](encryption_demo.md).
+
 ## Trust boundaries and controls
 
 1. **Source to intake:** Preserve supplied originals and citations. Do not silently correct source data. Record transformations separately, verify source metadata, and control write access.

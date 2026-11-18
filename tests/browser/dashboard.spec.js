@@ -237,7 +237,7 @@ test("wide data tables can be focused and horizontally scrolled with the keyboar
   const region = page.locator("#view-overview .table-scroll").first();
   await region.focus();
   await expect(region).toBeFocused();
-  await page.keyboard.press("End");
+  for (let step = 0; step < 8; step += 1) await page.keyboard.press("ArrowRight");
   const scrollLeft = await region.evaluate((element) => element.scrollLeft);
   expect(scrollLeft).toBeGreaterThan(0);
 });

@@ -46,6 +46,7 @@ def test_dashboard_uses_one_screen_dropdown_for_all_views():
         "view-summary",
         "view-overview",
         "view-measures",
+        "view-feature-coverage",
         "view-records",
         "view-context",
         "view-threats",

@@ -83,7 +83,7 @@ def test_dashboard_feature_coverage_accounts_for_assignment_feature_groups():
     rows = re.findall(r'\{ feature: "[^"]+", status: "([^"]+)"', match.group(1))
     assert len(rows) == 17
     assert set(rows) == {"Source-reported", "Partial", "Research context", "Not collected"}
-    assert "No estimated or derived environmental observations" in html
+    assert "contains no estimated, assumed, or derived environmental observations" in html
     assert "function renderFeatureCoverage()" in script
 
 

@@ -739,7 +739,25 @@ tr:last-child td {
     width: calc(100% - 1rem);
   }
 
-  .filters,
+  .filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    min-width: 0;
+  }
+
+  .filters > label,
+  .filters select,
+  .filters input,
+  .table-card,
+  .chart-card,
+  .measure-guide,
+  .table-scroll {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .filters-wide {
     grid-template-columns: minmax(0, 1fr);
   }

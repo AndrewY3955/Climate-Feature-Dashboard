@@ -110,7 +110,7 @@ This is an educational file-level demonstration only. It is not wired into the d
 
 ## Control status
 
-The Python validation, separate adversarial generator, SHA-256 manifests, record-level manipulation log, standalone AES-256-GCM encryption demonstration, and automated tests are implemented as local prototype controls. Tests cover trusted-manifest verification, detection of a changed file, separation of the adversarial copy from trusted input, and logging of the controlled changes. The source-backed dataset and its adversarial copy are written to separate output files. The project has not established independent manifest custody, MFA, organizational access controls, encryption configuration, external key custody, central audit logs, protected remote backups, automated source-register cross-checking, or Power BI workspace controls; these require host/workspace configuration or further implementation.
+The Python validation, separate adversarial generator, SHA-256 manifests, record-level manipulation log, standalone AES-256-GCM encryption demonstration, and automated tests are implemented as local prototype controls. Tests cover trusted-manifest verification, detection of a changed file, separation of the adversarial copy from trusted input, and logging of the controlled changes. The source-backed dataset and its adversarial copy are written to separate output files. The project has not established independent manifest custody, MFA, organizational access controls, dashboard-integrated encryption or key custody, central audit logs, protected remote backups, automated source-register cross-checking, or Power BI workspace controls; these require host/workspace configuration or further implementation.
 
 ## Indicators of compromise
 

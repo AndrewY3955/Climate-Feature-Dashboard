@@ -10,6 +10,7 @@ import csv
 import hashlib
 import io
 import json
+import secrets
 import shutil
 import tempfile
 from pathlib import Path
@@ -316,7 +317,7 @@ def run_security_demo() -> dict[str, Any]:
         {"id": "trusted-sha256", "name": "Trusted SHA-256 manifest verification", "status": "PASS" if manifest_ok else "FAIL", "detail": f"Expected {expected_hash}; actual {actual_hash}."},
     ]
 
-    demo_passphrase = "classroom-demo-passphrase-2026"
+    demo_passphrase = secrets.token_urlsafe(32)
     encrypted_a = encrypt_bytes(trusted_bytes, demo_passphrase)
     encrypted_b = encrypt_bytes(trusted_bytes, demo_passphrase)
     round_trip = decrypt_bytes(encrypted_a, demo_passphrase) == trusted_bytes
@@ -326,7 +327,7 @@ def run_security_demo() -> dict[str, Any]:
     tests.append({"id": "aes-gcm-fresh-nonce", "name": "Fresh random salt and nonce per encryption", "status": "PASS" if fresh_parameters else "FAIL", "detail": "Two encryptions of the same input produced different salt/nonce headers."})
 
     try:
-        decrypt_bytes(encrypted_a, "incorrect-demo-passphrase")
+        decrypt_bytes(encrypted_a, secrets.token_urlsafe(32))
         wrong_key_rejected = False
     except ValueError as exc:
         wrong_key_rejected = "Authentication failed" in str(exc)

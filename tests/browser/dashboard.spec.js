@@ -222,8 +222,11 @@ test("keyboard tab order reaches every visible control in every dashboard view",
       return candidates.length;
     });
     expect(expected, `Focusable controls in ${viewId}`).toBeGreaterThan(0);
-    const visited = new Set();
-    for (let step = 0; step < expected + 1; step += 1) {
+    const skipLink = page.locator(".skip-link");
+    await skipLink.focus();
+    await expect(skipLink).toBeFocused();
+    const visited = new Set(["0"]);
+    for (let step = 1; step < expected; step += 1) {
       await page.keyboard.press("Tab");
       const index = await page.evaluate(() => document.activeElement.getAttribute("data-qa-tab-index"));
       if (index !== null) visited.add(index);

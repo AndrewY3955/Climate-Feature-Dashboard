@@ -71,3 +71,13 @@ def test_security_controls_enforce_expected_inventory_and_scope_counts():
     assert 'controlCounts["Documented manual"] !== 1' in script
     assert 'controlCounts.Recommended !== 2' in script
     assert 'Showing ${controls.length} of ${dashboardData.controls.length} documented controls' in script
+
+
+def test_dashboard_avoids_html_string_injection_and_uses_safe_external_links():
+    script = (UI / "app.js").read_text(encoding="utf-8")
+    assert ".innerHTML" not in script
+    assert "insertAdjacentHTML" not in script
+    assert "eval(" not in script
+    assert "new Function(" not in script
+    assert 'link.rel = "noopener noreferrer"' in script
+    assert 'parsed.protocol !== "https:"' in script

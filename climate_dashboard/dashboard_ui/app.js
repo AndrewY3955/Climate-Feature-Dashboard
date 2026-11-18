@@ -68,6 +68,26 @@ const tableColumns = {
 
 const NO_OBSERVATIONS = "__no_observations__";
 
+const featureCoverage = [
+  { feature: "Total energy consumption", status: "Source-reported", metrics: ["Total energy consumption"], evidence: "TSMC 2024 Sustainability Report, p. 120; includes electricity, natural gas, and diesel.", limitation: "Company-reported total energy; not electricity-only." },
+  { feature: "Electricity consumption and source mix", status: "Partial", metrics: ["Total energy consumption"], evidence: "Electricity is included within TSMC's total energy figure; the observation does not split electricity by source.", limitation: "No separate electricity-only or renewable/nonrenewable breakdown is in the trusted records." },
+  { feature: "Electricity-grid carbon intensity", status: "Source-reported", metrics: ["Electricity-generation CO2-equivalent output emission rate"], evidence: "U.S. EPA eGRID 2023 CAMX subregion output-emissions factor.", limitation: "One rounded regional generation factor; not a company-specific purchased-electricity factor." },
+  { feature: "Water use and recycling", status: "Source-reported", metrics: ["Water recycled from recovery systems", "Tap water consumption", "Water consumption per 12-inch equivalent wafer mask layer"], evidence: "Three TSMC 2024 observations covering recycled water, Taiwan-fab tap-water consumption, and wafer-normalized intensity.", limitation: "These are different measures and boundaries; do not sum or substitute them." },
+  { feature: "Ultrapure-water use", status: "Research context", metrics: [], evidence: "Discussed in Wang et al. (2023) and the literature review.", limitation: "No UPW value is included in the trusted observation dataset." },
+  { feature: "Greenhouse-gas emissions", status: "Partial", metrics: ["Scope 1 and Scope 2 greenhouse-gas emissions", "Reported greenhouse-gas emissions"], evidence: "Samsung Device Solutions combined Scope 1 plus market-based Scope 2; EPA 2017 U.S. electronics-manufacturing sector total.", limitation: "No separate Scope 1/Scope 2 series, no Scope 3 observation, and the EPA sector includes non-semiconductor activity." },
+  { feature: "Fluorinated process-gas emissions", status: "Research context", metrics: [], evidence: "Process gases and fluorinated GHGs are discussed in the reviewed semiconductor literature.", limitation: "No comparable source-backed process-gas inventory is included." },
+  { feature: "Technology node and mask layers", status: "Research context", metrics: [], evidence: "Kuo et al. (2022) and the Ruberti studies discuss process nodes, mask layers, and manufacturing-index assumptions.", limitation: "No node-level or mask-layer observation is added to the company dataset." },
+  { feature: "Manufacturing yield", status: "Not collected", metrics: [], evidence: "No yield observation is registered in the reviewed dataset or selected dashboard source set.", limitation: "No yield comparison or yield-adjusted footprint is supported." },
+  { feature: "Chip materials and chemical inputs", status: "Research context", metrics: [], evidence: "Material, chemical, and process-input categories are discussed in the life-cycle literature.", limitation: "No source-backed bill of materials or comparable material inventory is collected." },
+  { feature: "Semiconductor packaging materials", status: "Not collected", metrics: [], evidence: "The reviewed source plan identifies packaging as outside the measured dataset; Kuo et al. identify packaging as future work.", limitation: "No packaging composition or packaging life-cycle value is measured." },
+  { feature: "Manufacturing location and geography", status: "Partial", metrics: ["*"], evidence: "Geographic scope is retained for each observation, including Taiwan fabs and the CAMX and U.S. regional/sector records.", limitation: "The data do not provide a comparable facility-level location inventory or supply-chain map." },
+  { feature: "Waste generation", status: "Research context", metrics: [], evidence: "Waste indicators are discussed in Ruberti (2023, 2024) and other reviewed literature.", limitation: "No waste-generation observation is included in the trusted dataset." },
+  { feature: "Water scarcity and watershed context", status: "Research context", metrics: [], evidence: "Frost and Hua (2019) model spatial and seasonal water-scarcity interactions.", limitation: "No scarcity score is joined to the current company observations; modeled withdrawals are not direct measurements." },
+  { feature: "Lifecycle impacts and boundaries", status: "Research context", metrics: [], evidence: "Life-cycle assessment and boundary choices are discussed in Kuo et al. (2022) and the literature review.", limitation: "The seven records are operational, regional, or sector indicators, not a harmonized product life-cycle inventory." },
+  { feature: "Scope 3, supply-chain, and transportation impacts", status: "Not collected", metrics: [], evidence: "The literature review documents incomplete Scope 3 disclosure and value-chain coverage.", limitation: "No comparable Scope 3, supplier, logistics, or transportation observation is included." },
+  { feature: "Chip operating efficiency and data-center energy", status: "Not collected", metrics: [], evidence: "These use-phase topics are outside the selected source-backed dataset.", limitation: "No chip performance-per-watt or data-center use-phase analysis is supported." }
+];
+
 const measureGuides = {
   "Total energy consumption": {
     meaning: "Total energy reported by the organization; this includes electricity, natural gas, and diesel for the cited observation.",
@@ -517,6 +537,40 @@ function renderDataContext() {
   ]);
 }
 
+function renderFeatureCoverage() {
+  const counts = new Map(["Source-reported", "Partial", "Research context", "Not collected"].map((status) => [status, 0]));
+  const rows = featureCoverage.map((item) => {
+    const matching = dashboardData.trusted.filter((record) => item.metrics.includes("*") || item.metrics.includes(record.metric));
+    const status = item.status === "Source-reported" && matching.length === 0 ? "Not collected" : item.status;
+    counts.set(status, counts.get(status) + 1);
+    return {
+      feature: item.feature,
+      status,
+      observations: matching.length ? matching.map((record) => record.record_id).join(", ") : "None",
+      evidence: item.evidence,
+      limitation: item.limitation,
+    };
+  });
+  const summary = document.querySelector("#feature-coverage-summary");
+  summary.replaceChildren();
+  for (const [status, count] of counts) {
+    const card = make("article", "summary-card");
+    card.append(make("span", "summary-label", status), make("span", "summary-value", count));
+    summary.append(card);
+  }
+  renderTable(
+    document.querySelector("#feature-coverage-table"),
+    [
+      ["feature", "Assignment feature"],
+      ["status", "Evidence status"],
+      ["observations", "Linked records"],
+      ["evidence", "Evidence basis"],
+      ["limitation", "Coverage limitation"],
+    ],
+    rows
+  );
+}
+
 function renderExecutiveSummary() {
   const project = dashboardData.project_summary[0] || {};
   document.querySelector("#project-question").textContent = project.research_question || "";
@@ -528,6 +582,7 @@ function renderExecutiveSummary() {
     ["Full-text-reviewed journal papers", dashboardData.papers.length],
     ["ATT&CK scenario references", dashboardData.threat_intel.length],
     ["Logged simulation events", dashboardData.changes.length],
+    ["Environmental features accounted for", featureCoverage.length],
   ];
   const summary = document.querySelector("#executive-summary");
   summary.replaceChildren();
@@ -868,6 +923,49 @@ function renderComparison() {
       details.append(item);
     }
     card.append(heading, details);
+    const interpretation = {
+      "ADV-001": {
+        unnoticed: "A plausible-looking numeric value can pass a casual visual review when the reader does not open the source record or compare the trusted version.",
+        conclusion: "The displayed total energy demand is overstated by 50%; this is a fabricated scenario value, not a real-world change.",
+        trust: "A mismatch between the report and its cited source undermines confidence in the dashboard and its review process.",
+        detect: "Compare the record-level value and SHA-256 digest with an independently protected trusted baseline; inspect the manipulation log.",
+        prevent: "Restrict write access, require second-person review, preserve versioned source records, and protect the reference manifest separately.",
+        evidence: "Trusted and adversarial CSVs, source PDF page 120, file hashes, Git/version history, approval records, and platform audit logs."
+      },
+      "ADV-002": {
+        unnoticed: "The source URL and source ID remain present, so a table may look mostly intact even though the human-readable publisher/report label has disappeared.",
+        conclusion: "The numeric value is unchanged, but the evidence becomes harder to interpret and verify quickly.",
+        trust: "Missing attribution weakens traceability and can make a valid observation appear unsupported.",
+        detect: "Validate required source labels and compare source metadata with the source register and trusted record.",
+        prevent: "Require complete provenance fields, reject or flag blank source labels, and review metadata changes before publication.",
+        evidence: "Before/after record diff, source register, validation warning, source PDF, and approved change record."
+      },
+      "ADV-003": {
+        unnoticed: "A filtered or simplified view can omit an entire category; readers may mistake the absence of water records for an absence of water impact.",
+        conclusion: "All three water observations disappear, shifting attention toward energy and emissions and hiding water-related resource demand.",
+        trust: "Selective omission can create a materially incomplete environmental narrative even when remaining values are unchanged.",
+        detect: "Compare record IDs, row counts, and required-feature coverage against the trusted baseline; inspect filters and the change log.",
+        prevent: "Maintain a feature-coverage register, require review of omissions and filters, and prevent the adversarial copy from replacing trusted data.",
+        evidence: "Trusted/adversarial CSV diff, expected metric inventory, dashboard filter settings, screenshots, change log, and repository history."
+      }
+    }[change.change_id];
+    if (interpretation) {
+      const analysis = make("div", "manipulation-analysis");
+      analysis.append(make("h5", "", "Interpretation and response analysis"));
+      for (const [label, value] of [
+        ["Why it may go unnoticed", interpretation.unnoticed],
+        ["Effect on climate conclusion", interpretation.conclusion],
+        ["Effect on user trust", interpretation.trust],
+        ["Detection control", interpretation.detect],
+        ["Prevention control", interpretation.prevent],
+        ["Incident-response evidence", interpretation.evidence],
+      ]) {
+        const item = make("p", "", "");
+        item.append(make("strong", "", label + ": "), document.createTextNode(value));
+        analysis.append(item);
+      }
+      card.append(analysis);
+    }
     changeLog.append(card);
   }
 }
@@ -980,6 +1078,7 @@ async function initialize() {
     document.querySelector("#control-status-filter").addEventListener("change", renderControls);
     document.querySelector("#response-stage-filter").addEventListener("change", renderIncidentResponse);
     renderExecutiveSummary();
+    renderFeatureCoverage();
     renderOverview();
     renderMeasureGuide();
     renderRecords();

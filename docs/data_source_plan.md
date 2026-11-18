@@ -10,6 +10,12 @@ The assignment lists possible features rather than requiring every feature or a 
 
 Packaging materials, process-gas inventories, water-scarcity scores, facility-level comparisons, and comparable historical company series remain outside the measured dataset because the supplied sources do not provide a sufficiently reviewed, consistently scoped record set for them. This is a documented scope limit, not a claim that those impacts are unimportant. No new values are estimated or inferred to fill these gaps. The seven records are sufficient for the project's provenance, interpretation, and controlled-manipulation demonstration, but not for industry-wide conclusions, trends, or company rankings.
 
+## Assignment feature coverage
+
+The full feature-to-evidence crosswalk is maintained in [environmental_feature_coverage.md](environmental_feature_coverage.md) and displayed in the dashboard's **Environmental feature coverage** view. It classifies assignment topics as source-reported, partial, research context, or not collected. This avoids treating a feature discussed in a paper as though it were measured in a company observation.
+
+The trusted dataset currently contains seven source-reported observations. It contains no estimated or derived environmental observations; unit conversions retain original values and explicit formulas. Synthetic fixtures and adversarial modifications remain separate. The crosswalk identifies electricity-source splits, UPW, process gases, yield, materials, packaging, waste, water scarcity, Scope 3, lifecycle, and use-phase gaps without filling them with unsupported values.
+
 ## Source register
 
 | Source ID | Source and local evidence | Measure/use | Coverage and boundary | Review status and limitations |

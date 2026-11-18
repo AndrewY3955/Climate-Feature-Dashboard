@@ -5,7 +5,7 @@
 **Final Project Report**
 **Climate-Feature Dashboard for Semiconductor Technology**
 Course project on climate literacy, threat intelligence, cybersecurity, data integrity, and incident response
-Prepared: October 20, 2026
+Prepared: November 17, 2026
 
 ## 2. Abstract or Executive Summary
 
@@ -38,7 +38,7 @@ This is a classroom prototype, not an enterprise-secured service, scientific inv
 
 **How can a provenance-aware dashboard communicate reported energy, water, and greenhouse-gas indicators relevant to semiconductor manufacturing while making differences in source scope and intentional data manipulation visible to users?**
 
-The project evaluates transparency and workflow behavior, not semiconductor-sector performance or causal climate effects.
+The project evaluates transparency and workflow behavior, not semiconductor-sector performance or causal climate effects. The dashboard's feature-coverage register accounts for 17 assignment feature groups and classifies them as source-reported, partial, research context, or not collected; it explicitly records that no estimated or derived environmental observations were added.
 
 ## 6. Background on Semiconductor Technology
 
@@ -118,9 +118,9 @@ The architecture, trust boundaries, and file responsibilities are documented in 
 
 ## 15. Secure Dashboard Design
 
-Implemented controls include explicit source metadata, record IDs, unit/period/geography/boundary/limitation display, metric-unit validation, separate trusted and adversarial paths, a SHA-256 manifest, validation results, and a loopback-only local server with fixed routes and response headers. The dashboard has trusted overview, measure guide, provenance, integrity, and adversarial comparison views. Values are not aggregated across unlike metrics; omitted records are shown as removed rather than zero.
+Implemented controls include explicit source metadata, record IDs, unit/period/geography/boundary/limitation display, metric-unit validation, separate trusted and adversarial paths, a SHA-256 manifest, validation results, and a loopback-only local server with fixed routes and response headers. The dashboard has trusted overview, measure guide, provenance, environmental feature coverage, integrity, and adversarial comparison views. Values are not aggregated across unlike metrics; omitted records are shown as removed rather than zero. A separate AES-256-GCM utility demonstrates authenticated file encryption, but is not integrated into dashboard storage or transport.
 
-The Power BI import model adds source, literature, metric, threat-reference, control, incident-response, integrity, and project-summary tables. It remains a CSV model, not an authored or deployed Power BI report. MFA, role-based access, encryption/key management, centralized audit logging, separate manifest custody, and platform workspace controls are recommendations, not implemented features.
+The Power BI import model adds source, literature, metric, threat-reference, control, incident-response, integrity, and project-summary tables. It remains a CSV model, not an authored or deployed Power BI report. MFA, role-based access, dashboard-integrated encryption/key management, centralized audit logging, separate manifest custody, and platform workspace controls are not deployed. A standalone AES-GCM file-encryption utility is implemented for demonstration only and does not encrypt dashboard storage or transport.
 
 ## 16. Threat Model
 
@@ -152,6 +152,7 @@ These are project responsibilities and recommendations; identities, remote acces
 | Source-register linkage in Power BI export | Implemented and tested | Observations with unresolved source IDs | Publisher identity and source reliability still require human review. |
 | MFA, least privilege, access audit, protected backups | Recommended | Account misuse and recovery gaps | Not deployed; requires shared hosting controls. |
 | Filter/axis/label/report-version review | Documented manual review | Visualization-only manipulation | No native Power BI report/workspace is included. |
+| AES-256-GCM authenticated file-encryption demo | Implemented as a standalone utility and tested | Demonstrates confidentiality and ciphertext tamper rejection | Does not encrypt dashboard storage, GitHub Pages content, network traffic, or production backups; passphrase/key custody remains external. |
 
 ## 20. Incident-Response Process
 
@@ -161,7 +162,7 @@ Investigators should retain source copies, record-level diffs, manifests, valida
 
 ## 21. Accurate Dashboard Analysis
 
-The dashboard is the project's presentation surface, organized into ten navigable views: project summary, environmental data, measure guide, records and provenance, reports and studies, threat references, security controls, incident response, integrity checks, and adversarial comparison. Dropdowns select reports, measures, years, organizations, and original-versus-standardized units. Each selected measure is shown as an individual record, not a sum or company ranking. Captured views are [trusted overview](../evidence/trusted-overview.png), [measure guide](../evidence/measure-guide.png), [provenance](../evidence/provenance.png), and [integrity](../evidence/integrity.png).
+The dashboard is the project's presentation surface, organized into eleven navigable views: project summary, environmental data, measure guide, environmental feature coverage, records and provenance, reports and studies, threat references, security controls, incident response, integrity checks, and adversarial comparison. Dropdowns select reports, measures, years, organizations, and original-versus-standardized units. Each selected measure is shown as an individual record, not a sum or company ranking. Captured views are [trusted overview](../evidence/trusted-overview.png), [measure guide](../evidence/measure-guide.png), [provenance](../evidence/provenance.png), and [integrity](../evidence/integrity.png). The feature coverage view maps every rubric feature to its evidence status and limitations; see [environmental feature coverage](environmental_feature_coverage.md).
 
 The trusted export validated with seven rows and no validation warnings. The browser prototype is available via the documented `run` command and is distinct from Power BI Desktop. Screenshots in `evidence/` are for the local browser prototype and must not be described as Power BI screenshots.
 
@@ -214,7 +215,7 @@ The generated Power BI model provides concise executive, environmental, provenan
 - There is no current comparable process-gas inventory, water-scarcity index, facility-level energy/emissions panel, or packaging/product life-cycle dataset.
 - The project owner certified the five selected journal papers as assignment-eligible on October 20, 2026. The project did not independently audit each journal's peer-review process. Paper 2 was reviewed from images; Paper 6 is a dissertation and is supplementary.
 - ATT&CK references are taxonomy mappings. The project contains no live threat feed, IoCs, actor attribution, or real incident evidence.
-- The local server is a loopback-only classroom prototype without identity, authorization, TLS, remote audit, or protected manifest custody.
+- The local server is a loopback-only classroom prototype without identity, authorization, TLS, remote audit, or protected manifest custody. A standalone AES-256-GCM demonstration is available, but it is not connected to the dashboard's storage or transport path.
 - No Power BI Desktop was available to produce or inspect a `.pbix`/`.pbip`; the tested deliverable is an import-ready CSV model.
 - Screenshots demonstrate the local browser dashboard, not a Power BI report.
 
@@ -233,13 +234,13 @@ The generated Power BI model provides concise executive, environmental, provenan
 - Import and review Intel, process-gas, water-stress, and newer government data only from table-specific, source-located evidence.
 - Develop a compatible multi-year facility/foundry dataset with clear production denominators, scope coverage, and uncertainty.
 - Build and test the report pages in Power BI Desktop, capture actual Power BI screenshots, and compare report/model versions as well as CSVs.
-- Add independently protected signatures or an external trusted hash service, role-based access, MFA, and centralized audit logging if the dashboard moves beyond localhost.
+- Add independently protected signatures or an external trusted hash service, role-based access, MFA, centralized audit logging, and platform-managed encryption at rest/in transit if the dashboard moves beyond localhost.
 - Add automated source-register enforcement to the core pipeline, coverage expectations by metric, and reviewer approval/version history.
 - Validate the live dashboard demonstration on another clean clone and on a POSIX host.
 
 ## 30. Conclusion
 
-The project delivers reviewed source records, five full-text paper summaries, a separate synthetic test dataset, documented security and response procedures, a local trusted/adversarial dashboard, and a tested Power BI import pack. Its evidence demonstrates how a changed value, weakened provenance, or removed feature can alter the apparent story even when each remaining number looks plausible.
+The project delivers reviewed source records, five full-text paper summaries, an assignment-aligned feature coverage register, a separate synthetic test dataset, documented security and response procedures, a local trusted/adversarial dashboard, a standalone AES-GCM encryption demonstration, and a tested Power BI import pack. Its evidence demonstrates how a changed value, weakened provenance, or removed feature can alter the apparent story even when each remaining number looks plausible.
 
 The data support transparent reporting of selected disclosed indicators—not a comprehensive semiconductor climate footprint or a company ranking. Reliable conclusions require accurate values plus traceable sources, compatible boundaries, explicit assumptions, complete feature selection, protected transformations, and honest visual design.
 
@@ -272,4 +273,4 @@ The data support transparent reporting of selected disclosed indicators—not a 
 
 - *Climate-Feature Dashboard for Semiconductor Technology* assignment instructions. [`project_instructions.pdf`](project_instructions.pdf).
 - Project source register, observation register, and paper register: `data/intake/sources_template.csv`, `data/intake/observations_template.csv`, and `data/intake/papers_template.csv`.
-- Project methods and evidence: [`data_source_plan.md`](data_source_plan.md), [`data_dictionary.md`](data_dictionary.md), [`literature_review.md`](literature_review.md), [`threat_model.md`](threat_model.md), [`incident_response.md`](incident_response.md), [`system_architecture.md`](system_architecture.md), [`manipulation_comparison.md`](manipulation_comparison.md), and [`power_bi_setup.md`](power_bi_setup.md).
+- Project methods and evidence: [`data_source_plan.md`](data_source_plan.md), [`data_dictionary.md`](data_dictionary.md), [`literature_review.md`](literature_review.md), [`threat_model.md`](threat_model.md), [`incident_response.md`](incident_response.md), [`system_architecture.md`](system_architecture.md), [`manipulation_comparison.md`](manipulation_comparison.md), [`power_bi_setup.md`](power_bi_setup.md), [`environmental_feature_coverage.md`](environmental_feature_coverage.md), [`encryption_demo.md`](encryption_demo.md), and [`presentation_outline.md`](presentation_outline.md).

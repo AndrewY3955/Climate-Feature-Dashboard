@@ -32,6 +32,8 @@ See [dashboard evidence](evidence/README.md) for descriptions and interpretation
 - Validate input records and generate normalized datasets.
 - Compare a trusted dataset with a separate, intentionally manipulated copy.
 - Review SHA-256 integrity results, validation reports, and manipulation logs.
+- Audit assignment feature coverage and distinguish source-reported data, research context, and uncollected features.
+- Run a separate AES-256-GCM authenticated-encryption demonstration with wrong-key and tamper detection.
 - Export a 13-table CSV model for optional Power BI import.
 
 ## Technology
@@ -70,7 +72,7 @@ GitHub Pages does not run the Python server or regenerate data in a visitor's br
 4. Keep synthetic test data and intentional manipulations separate from reviewed observations.
 5. Review the trusted and controlled adversarial views in the dashboard.
 
-A matching SHA-256 value checks bytes against a reference; it does not prove that a source claim is true, complete, or independently audited. See the [integrity and recovery guide](docs/integrity_and_recovery.md).
+A matching SHA-256 value checks bytes against a reference; it does not prove that a source claim is true, complete, or independently audited. See the [integrity and recovery guide](docs/integrity_and_recovery.md), [environmental feature coverage register](docs/environmental_feature_coverage.md), [AES-GCM encryption demo](docs/encryption_demo.md), and [presentation outline](docs/presentation_outline.md).
 
 ## Data and limitations
 
@@ -92,6 +94,8 @@ Synthetic test data and manipulated records are separate from the reviewed obser
 - [Data dictionary](docs/data_dictionary.md)
 - [Source collection guide](docs/collecting_sources_and_data.md)
 - [Requirement traceability](docs/requirement_traceability.md)
+- [Environmental feature coverage register](docs/environmental_feature_coverage.md)
+- [Presentation outline](docs/presentation_outline.md)
 
 **Dashboard and security**
 - [Dashboard setup and views](docs/dashboard_local.md)
@@ -103,6 +107,7 @@ Synthetic test data and manipulated records are separate from the reviewed obser
 - [Security policy](SECURITY.md)
 - [Optional Power BI setup](docs/power_bi_setup.md)
 - [Dashboard evidence screenshots](evidence/README.md)
+- [AES-GCM encryption demonstration](docs/encryption_demo.md)
 
 ## Tests
 

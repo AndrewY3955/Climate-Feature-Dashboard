@@ -46,6 +46,7 @@ def test_dashboard_uses_one_screen_dropdown_for_all_views():
         "view-summary",
         "view-overview",
         "view-measures",
+        "view-feature-coverage",
         "view-records",
         "view-context",
         "view-threats",
@@ -68,6 +69,22 @@ def test_dashboard_uses_one_screen_dropdown_for_all_views():
     queried_ids = set(re.findall(r'document\.querySelector\("#([^"]+)"\)', script))
     assert queried_ids <= ids
     assert all((dashboard_dir / asset.lstrip("/")).is_file() for asset in parser.assets)
+
+
+def test_dashboard_feature_coverage_accounts_for_assignment_feature_groups():
+    dashboard_dir = ROOT / "climate_dashboard" / "dashboard_ui"
+    html = (dashboard_dir / "index.html").read_text(encoding="utf-8")
+    script = (dashboard_dir / "app.js").read_text(encoding="utf-8")
+
+    assert 'id="feature-coverage-table"' in html
+    assert 'id="feature-coverage-summary"' in html
+    match = re.search(r"const featureCoverage = \[(.*?)\n\];", script, re.DOTALL)
+    assert match, "The feature coverage register must be present in the dashboard."
+    rows = re.findall(r'\{ feature: "[^"]+", status: "([^"]+)"', match.group(1))
+    assert len(rows) == 17
+    assert set(rows) == {"Source-reported", "Partial", "Research context", "Not collected"}
+    assert "contains no estimated observations or derived analytical metrics" in html
+    assert "function renderFeatureCoverage()" in script
 
 
 def test_demo_runbook_documents_dashboard_not_deleted_slideshow():

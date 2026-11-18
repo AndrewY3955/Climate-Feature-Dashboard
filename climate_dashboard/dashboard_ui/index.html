@@ -10,6 +10,7 @@
     <script src="/app.js" defer></script>
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Skip to dashboard content</a>
     <header class="site-header">
       <div class="header-inner">
         <p class="eyebrow">Semiconductor technology · climate features · data integrity</p>
@@ -18,7 +19,7 @@
       </div>
     </header>
 
-    <main class="page-shell">
+    <main id="main-content" class="page-shell">
       <aside class="notice" aria-label="Dataset limitation">
         <strong>Read before comparing:</strong>
         Each measure has its own unit and reporting boundary. Compare records only when the measure, year, unit basis, geography, organizational scope, and method align. The reviewed observations are not a representative industry sample.
@@ -30,6 +31,7 @@
             <option value="view-summary">Project summary</option>
             <option value="view-overview">Environmental data</option>
             <option value="view-measures">Measure guide</option>
+            <option value="view-feature-coverage">Environmental feature coverage</option>
             <option value="view-records">Records &amp; provenance</option>
             <option value="view-context">Reports &amp; studies</option>
             <option value="view-threats">Threat intelligence</option>
@@ -110,7 +112,7 @@
         </div>
         <div class="table-card">
           <h3>Records matching these filters</h3>
-          <div class="table-scroll"><table id="overview-table"></table></div>
+          <div class="table-scroll" role="region" aria-label="Environmental observations table; scroll horizontally to view all columns" tabindex="0"><table id="overview-table"></table></div>
         </div>
       </section>
 
@@ -128,7 +130,28 @@
         <aside id="guide-measure-detail" class="measure-guide" aria-live="polite"></aside>
         <div class="table-card">
           <h3>What the reviewed dataset contains</h3>
-          <div class="table-scroll"><table id="measure-inventory-table"></table></div>
+          <div class="table-scroll" role="region" aria-label="Measure inventory table; scroll horizontally to view all columns" tabindex="0"><table id="measure-inventory-table"></table></div>
+        </div>
+      </section>
+
+      <section class="view-panel" id="view-feature-coverage" aria-label="Environmental feature coverage" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Assignment scope and evidence coverage</p>
+            <h2>Environmental feature coverage</h2>
+          </div>
+          <span class="status-pill status-warning">Bounded evidence set</span>
+        </div>
+        <p class="section-copy">This view accounts for the environmental and technology features named in the assignment. It distinguishes source-backed observations from research context and features not collected; absence must never be interpreted as zero impact.</p>
+        <div id="feature-coverage-summary" class="summary-grid" aria-live="polite"></div>
+        <div class="notice notice-subtle">
+          <strong>How to read the statuses:</strong>
+          Source-reported means at least one reviewed publisher-reported observation exists. Partial means only part of the feature is represented or the geographic/organizational coverage is limited. Research context means the literature discusses the feature but no project observation measures it. Not collected means the current evidence set does not measure it or provide sufficient feature-specific evidence. The trusted dataset contains no estimated observations or derived analytical metrics. Standardized values that differ from source units are documented unit conversions with the original value retained; synthetic and adversarial copies are separate demonstrations.
+        </div>
+        <div class="table-card">
+          <h3>Feature-by-feature accounting</h3>
+          <p class="chart-note">Record counts refer to the seven trusted observations. Research-paper discussion is not a substitute for a measured company or facility observation.</p>
+          <div class="table-scroll" role="region" aria-label="Environmental feature coverage table; scroll horizontally to view all columns" tabindex="0"><table id="feature-coverage-table"></table></div>
         </div>
       </section>
 
@@ -149,7 +172,7 @@
           </label>
         </div>
         <div class="table-card">
-          <div class="table-scroll"><table id="records-table"></table></div>
+          <div class="table-scroll" role="region" aria-label="Records and provenance table; scroll horizontally to view all columns" tabindex="0"><table id="records-table"></table></div>
         </div>
       </section>
 
@@ -171,14 +194,14 @@
             <select id="context-item-filter" disabled></select>
           </label>
         </div>
-        <div id="context-detail" class="context-detail"></div>
+        <div id="context-detail" class="context-detail" aria-live="polite"></div>
         <div class="table-card">
           <h3 id="context-table-title">Registered sources</h3>
-          <div class="table-scroll"><table id="context-table"></table></div>
+          <div class="table-scroll" role="region" aria-label="Source reports and research papers table; scroll horizontally to view all columns" tabindex="0"><table id="context-table"></table></div>
         </div>
         <div class="table-card">
           <h3 id="source-observations-title">Reviewed observations from this report</h3>
-          <div class="table-scroll"><table id="source-observations"></table></div>
+          <div class="table-scroll" role="region" aria-label="Reviewed source observations table; scroll horizontally to view all columns" tabindex="0"><table id="source-observations"></table></div>
         </div>
       </section>
 
@@ -194,10 +217,10 @@
         <label>Threat reference
           <select id="threat-technique-filter" disabled></select>
         </label>
-        <div id="threat-detail" class="context-detail"></div>
+        <div id="threat-detail" class="context-detail" aria-live="polite"></div>
         <div class="table-card">
           <h3>Scenario reference inventory</h3>
-          <div class="table-scroll"><table id="threat-table"></table></div>
+          <div class="table-scroll" role="region" aria-label="Threat reference inventory table; scroll horizontally to view all columns" tabindex="0"><table id="threat-table"></table></div>
         </div>
       </section>
 
@@ -209,6 +232,10 @@
           </div>
         </div>
         <p class="section-copy">Filter controls by deployment state. Local prototype features are distinguished from controls that require a shared identity or hosting platform.</p>
+        <aside class="notice notice-subtle">
+          <strong>Encryption demonstration:</strong>
+          The repository includes a standalone AES-256-GCM file-encryption utility at <code>scripts/encryption_demo.py</code>. It demonstrates authenticated encryption and tamper rejection on a separate file; it does not encrypt this dashboard's storage or network traffic. See <code>docs/encryption_demo.md</code> for the reproducible demo.
+        </aside>
         <label>Control status
           <select id="control-status-filter" disabled></select>
         </label>
@@ -228,7 +255,7 @@
           <select id="response-stage-filter" disabled></select>
         </label>
         <div id="response-stage-list" class="stage-list"></div>
-        <div id="response-detail" class="context-detail"></div>
+        <div id="response-detail" class="context-detail" aria-live="polite"></div>
       </section>
 
       <section class="view-panel" id="view-integrity" aria-label="Integrity checks" hidden>
@@ -241,15 +268,19 @@
         <div id="integrity-summary" class="integrity-grid"></div>
         <div class="table-card">
           <h3>Pipeline validation details</h3>
-          <div id="validation-details"></div>
+          <div id="validation-details" aria-live="polite"></div>
         </div>
         <div class="table-card">
           <h3>Power BI context-pack validation</h3>
-          <div class="table-scroll"><table id="pack-validation-table"></table></div>
+          <div class="table-scroll" role="region" aria-label="Power BI context validation table; scroll horizontally to view all columns" tabindex="0"><table id="pack-validation-table"></table></div>
         </div>
         <aside class="notice notice-subtle">
           <strong>Integrity is not accuracy.</strong>
           A matching hash compares file bytes with the referenced manifest. It does not authenticate the publisher, prove the source measurement, or prevent tampering when both files share write permissions.
+        </aside>
+        <aside class="notice notice-subtle">
+          <strong>SHA-256 is hashing, not encryption.</strong>
+          SHA-256 creates a one-way digest to detect byte changes against a trusted reference. It does not encrypt, decrypt, or conceal file contents. This prototype does not implement application-level file encryption or encryption-key management.
         </aside>
       </section>
 

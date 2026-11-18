@@ -12,6 +12,6 @@
 ## Handoff status and remaining limitations
 
 - The project owner has certified the five selected papers as eligible. The seven-record source-backed dataset is complete for the declared proof-of-concept scope; do not expand it with unverified or incomparable data. Add records only if the assignment requires broader coverage and suitable sources are reviewed.
-- Final tests passed: 45 tests across Ubuntu Python 3.10–3.14, Windows Python 3.11, and macOS Python 3.11. Dependency security audit, CodeQL, and GitHub Pages static build also passed; the PR publish step was skipped, so production Pages remains unchanged.
+- Final tests passed: 46 tests across Ubuntu Python 3.10–3.14, Windows Python 3.11, and macOS Python 3.11. Dependency security audit, CodeQL, and GitHub Pages static build also passed; the PR publish step was skipped, so production Pages remains unchanged.
 - These changes remain on the open QA pull request and are not yet merged into main; the production GitHub Pages site is therefore unchanged.\n- Non-x86 CPU/platform combinations were not individually tested. The local service remains loopback-only by design.
 - The interactive browser dashboard fulfills the dashboard requirement. A native Power BI report is optional unless specifically required by the instructor; the CSV export is available as an alternate workflow.

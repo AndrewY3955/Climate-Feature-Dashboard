@@ -13,7 +13,7 @@ The assignment presents examples of relevant features; it does not require every
 - **Research context:** The selected literature discusses the feature, but no project observation measures it.
 - **Not collected:** The current reviewed source set does not provide a suitable project-specific observation or feature-specific evidence.
 
-No estimated or derived environmental observations are included in the seven-record trusted dataset. The values are source-reported, with documented unit conversions where applicable. Assumptions are documented as assumptions, not substituted for measurements. Synthetic fixture data and deliberately altered adversarial values are separate test/demo artifacts and must not be presented as environmental findings.
+No estimated environmental observations or derived analytical metrics are included in the seven-record trusted dataset. Some standardized values are mechanical unit conversions of source-reported values; the original values, units, and conversion methods are retained. Assumptions are documented as assumptions, not substituted for measurements. Synthetic fixture data and deliberately altered adversarial values are separate test/demo artifacts and must not be presented as environmental findings.
 
 ## Feature-to-evidence register
 
@@ -42,7 +42,7 @@ No estimated or derived environmental observations are included in the seven-rec
 | Data class | Current project treatment |
 |---|---|
 | Source-reported | Seven trusted observations in data/processed/reviewed/trusted_data.csv, traced to five registered source documents. |
-| Derived | No additional derived environmental observation is currently included. Unit conversions retain original values and explicit conversion methods. |
+| Derived | No derived analytical environmental metric is included. Mechanical unit conversions are documented transformations of reported values, with original values and units retained. |
 | Estimated | No estimated environmental observation is included. |
 | Assumption | Scope and methodology assumptions are documented in the proposal, source plan, and research reviews; they are not displayed as measured values. |
 | Synthetic demonstration | Separate pipeline fixture data, clearly identified as synthetic and not research evidence. |

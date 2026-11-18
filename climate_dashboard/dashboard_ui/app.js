@@ -80,7 +80,7 @@ const featureCoverage = [
   { feature: "Manufacturing yield", status: "Not collected", metrics: [], evidence: "No yield observation is registered in the reviewed dataset or selected dashboard source set.", limitation: "No yield comparison or yield-adjusted footprint is supported." },
   { feature: "Chip materials and chemical inputs", status: "Research context", metrics: [], evidence: "Material, chemical, and process-input categories are discussed in the life-cycle literature.", limitation: "No source-backed bill of materials or comparable material inventory is collected." },
   { feature: "Semiconductor packaging materials", status: "Not collected", metrics: [], evidence: "The reviewed source plan identifies packaging as outside the measured dataset; Kuo et al. identify packaging as future work.", limitation: "No packaging composition or packaging life-cycle value is measured." },
-  { feature: "Manufacturing location and geography", status: "Partial", metrics: [], evidence: "Geographic scope is retained for each observation, including Taiwan fabs and the CAMX and U.S. regional/sector records.", limitation: "The data do not provide a comparable facility-level location inventory or supply-chain map." },
+  { feature: "Manufacturing location and geography", status: "Partial", metrics: ["*"], evidence: "Geographic scope is retained for each observation, including Taiwan fabs and the CAMX and U.S. regional/sector records.", limitation: "The data do not provide a comparable facility-level location inventory or supply-chain map." },
   { feature: "Waste generation", status: "Research context", metrics: [], evidence: "Waste indicators are discussed in Ruberti (2023, 2024) and other reviewed literature.", limitation: "No waste-generation observation is included in the trusted dataset." },
   { feature: "Water scarcity and watershed context", status: "Research context", metrics: [], evidence: "Frost and Hua (2019) model spatial and seasonal water-scarcity interactions.", limitation: "No scarcity score is joined to the current company observations; modeled withdrawals are not direct measurements." },
   { feature: "Lifecycle impacts and boundaries", status: "Research context", metrics: [], evidence: "Life-cycle assessment and boundary choices are discussed in Kuo et al. (2022) and the literature review.", limitation: "The seven records are operational, regional, or sector indicators, not a harmonized product life-cycle inventory." },
@@ -540,7 +540,7 @@ function renderDataContext() {
 function renderFeatureCoverage() {
   const counts = new Map(["Source-reported", "Partial", "Research context", "Not collected"].map((status) => [status, 0]));
   const rows = featureCoverage.map((item) => {
-    const matching = dashboardData.trusted.filter((record) => item.metrics.includes(record.metric));
+    const matching = dashboardData.trusted.filter((record) => item.metrics.includes("*") || item.metrics.includes(record.metric));
     const status = item.status === "Source-reported" && matching.length === 0 ? "Not collected" : item.status;
     counts.set(status, counts.get(status) + 1);
     return {

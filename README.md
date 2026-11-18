@@ -120,4 +120,4 @@ python -m pip install -r requirements-dev.txt
 python -m pytest -W error::DeprecationWarning
 ```
 
-GitHub Actions tests Python 3.10–3.14 on Ubuntu and Python 3.11 on Windows and macOS. The Browser QA workflow runs the 11 dashboard views in Chromium, Firefox, and WebKit, including responsive widths, keyboard navigation, runtime/CSP checks, and axe-core WCAG 2.1 AA checks. See [dashboard security and accessibility validation](docs/dashboard_security_validation.md) for hosting and testing boundaries.
+GitHub Actions tests Python 3.10–3.14 on Ubuntu and Python 3.11 on Windows and macOS. The Browser QA workflow runs the 11 dashboard views in Chromium and Firefox, including responsive widths, keyboard navigation, runtime/CSP checks, and axe-core WCAG 2.1 AA checks. See [dashboard security and accessibility validation](docs/dashboard_security_validation.md) for hosting and testing boundaries.

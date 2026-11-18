@@ -177,6 +177,28 @@ test("keyboard users can skip navigation and reach labeled dashboard controls", 
   await expect(page.getByLabel("Information type")).toBeEnabled();
 });
 
+test("keyboard tab order reaches every visible control in every dashboard view", async ({ page }) => {
+  for (const viewId of viewIds) {
+    await page.locator("#screen-selector").selectOption(viewId);
+    const expected = await page.evaluate(() => {
+      const candidates = Array.from(document.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )).filter((element) => !element.closest("[hidden]") && element.getClientRects().length > 0);
+      candidates.forEach((element, index) => element.setAttribute("data-qa-tab-index", String(index)));
+      return candidates.length;
+    });
+    expect(expected, `Focusable controls in ${viewId}`).toBeGreaterThan(0);
+    await page.evaluate(() => document.activeElement.blur());
+    const visited = new Set();
+    for (let step = 0; step < expected + 1; step += 1) {
+      await page.keyboard.press("Tab");
+      const index = await page.evaluate(() => document.activeElement.getAttribute("data-qa-tab-index"));
+      if (index !== null) visited.add(index);
+    }
+    expect(visited.size, `Keyboard traversal coverage in ${viewId}`).toBe(expected);
+  }
+});
+
 test("visible views pass automated WCAG 2.1 AA accessibility checks", async ({ browser, baseURL }) => {
   // Axe injects its own script. Use a separate test-only context with CSP bypass;
   // the normal application context is independently tested for CSP enforcement above.

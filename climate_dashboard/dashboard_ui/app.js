@@ -69,10 +69,10 @@ const tableColumns = {
 const NO_OBSERVATIONS = "__no_observations__";
 
 const featureCoverage = [
-  { feature: "Total energy consumption", status: "Measured", metrics: ["Total energy consumption"], evidence: "TSMC 2024 Sustainability Report, p. 120; includes electricity, natural gas, and diesel.", limitation: "Company-reported total energy; not electricity-only." },
+  { feature: "Total energy consumption", status: "Source-reported", metrics: ["Total energy consumption"], evidence: "TSMC 2024 Sustainability Report, p. 120; includes electricity, natural gas, and diesel.", limitation: "Company-reported total energy; not electricity-only." },
   { feature: "Electricity consumption and source mix", status: "Partial", metrics: ["Total energy consumption"], evidence: "Electricity is included within TSMC's total energy figure; the observation does not split electricity by source.", limitation: "No separate electricity-only or renewable/nonrenewable breakdown is in the trusted records." },
-  { feature: "Electricity-grid carbon intensity", status: "Measured", metrics: ["Electricity-generation CO2-equivalent output emission rate"], evidence: "U.S. EPA eGRID 2023 CAMX subregion output-emissions factor.", limitation: "One rounded regional generation factor; not a company-specific purchased-electricity factor." },
-  { feature: "Water use and recycling", status: "Measured", metrics: ["Water recycled from recovery systems", "Tap water consumption", "Water consumption per 12-inch equivalent wafer mask layer"], evidence: "Three TSMC 2024 observations covering recycled water, Taiwan-fab tap-water consumption, and wafer-normalized intensity.", limitation: "These are different measures and boundaries; do not sum or substitute them." },
+  { feature: "Electricity-grid carbon intensity", status: "Source-reported", metrics: ["Electricity-generation CO2-equivalent output emission rate"], evidence: "U.S. EPA eGRID 2023 CAMX subregion output-emissions factor.", limitation: "One rounded regional generation factor; not a company-specific purchased-electricity factor." },
+  { feature: "Water use and recycling", status: "Source-reported", metrics: ["Water recycled from recovery systems", "Tap water consumption", "Water consumption per 12-inch equivalent wafer mask layer"], evidence: "Three TSMC 2024 observations covering recycled water, Taiwan-fab tap-water consumption, and wafer-normalized intensity.", limitation: "These are different measures and boundaries; do not sum or substitute them." },
   { feature: "Ultrapure-water use", status: "Research context", metrics: [], evidence: "Discussed in Wang et al. (2023) and the literature review.", limitation: "No UPW value is included in the trusted observation dataset." },
   { feature: "Greenhouse-gas emissions", status: "Partial", metrics: ["Scope 1 and Scope 2 greenhouse-gas emissions", "Reported greenhouse-gas emissions"], evidence: "Samsung Device Solutions combined Scope 1 plus market-based Scope 2; EPA 2017 U.S. electronics-manufacturing sector total.", limitation: "No separate Scope 1/Scope 2 series, no Scope 3 observation, and the EPA sector includes non-semiconductor activity." },
   { feature: "Fluorinated process-gas emissions", status: "Research context", metrics: [], evidence: "Process gases and fluorinated GHGs are discussed in the reviewed semiconductor literature.", limitation: "No comparable source-backed process-gas inventory is included." },
@@ -538,10 +538,10 @@ function renderDataContext() {
 }
 
 function renderFeatureCoverage() {
-  const counts = new Map(["Measured", "Partial", "Research context", "Not collected"].map((status) => [status, 0]));
+  const counts = new Map(["Source-reported", "Partial", "Research context", "Not collected"].map((status) => [status, 0]));
   const rows = featureCoverage.map((item) => {
     const matching = dashboardData.trusted.filter((record) => item.metrics.includes(record.metric));
-    const status = item.status === "Measured" && matching.length === 0 ? "Not collected" : item.status;
+    const status = item.status === "Source-reported" && matching.length === 0 ? "Not collected" : item.status;
     counts.set(status, counts.get(status) + 1);
     return {
       feature: item.feature,

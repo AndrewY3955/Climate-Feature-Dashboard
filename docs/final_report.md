@@ -38,7 +38,7 @@ This is a classroom prototype, not an enterprise-secured service, scientific inv
 
 **How can a provenance-aware dashboard communicate reported energy, water, and greenhouse-gas indicators relevant to semiconductor manufacturing while making differences in source scope and intentional data manipulation visible to users?**
 
-The project evaluates transparency and workflow behavior, not semiconductor-sector performance or causal climate effects.
+The project evaluates transparency and workflow behavior, not semiconductor-sector performance or causal climate effects. The dashboard's feature-coverage register accounts for 17 assignment feature groups and classifies them as source-reported, partial, research context, or not collected; it explicitly records that no estimated or derived environmental observations were added.
 
 ## 6. Background on Semiconductor Technology
 

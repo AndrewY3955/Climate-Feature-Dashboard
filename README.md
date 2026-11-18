@@ -34,6 +34,7 @@ See [dashboard evidence](evidence/README.md) for descriptions and interpretation
 - Review SHA-256 integrity results, validation reports, and manipulation logs.
 - Audit assignment feature coverage and distinguish source-reported data, research context, and uncollected features.
 - Run a separate AES-256-GCM authenticated-encryption demonstration with wrong-key and tamper detection.
+- Export filtered trusted records to UTF-8 CSV and print the current dashboard view with a landscape layout for wide tables.
 - Export a 13-table CSV model for optional Power BI import.
 
 ## Technology

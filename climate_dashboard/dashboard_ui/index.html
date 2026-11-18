@@ -232,6 +232,10 @@
           </div>
         </div>
         <p class="section-copy">Filter controls by deployment state. Local prototype features are distinguished from controls that require a shared identity or hosting platform.</p>
+        <aside class="notice notice-subtle">
+          <strong>Encryption demonstration:</strong>
+          The repository includes a standalone AES-256-GCM file-encryption utility at <code>scripts/encryption_demo.py</code>. It demonstrates authenticated encryption and tamper rejection on a separate file; it does not encrypt this dashboard's storage or network traffic. See <code>docs/encryption_demo.md</code> for the reproducible demo.
+        </aside>
         <label>Control status
           <select id="control-status-filter" disabled></select>
         </label>

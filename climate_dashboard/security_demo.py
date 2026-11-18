@@ -1,6 +1,6 @@
 """Run safe, repeatable security and incident-response demonstrations.
 
-Every attack simulation operates on temporary copies or in-memory fixtures.
+Every attack simulation operates on in-memory copies or synthetic fixtures.
 No external system, real credential, production dataset, or network attack is used.
 """
 

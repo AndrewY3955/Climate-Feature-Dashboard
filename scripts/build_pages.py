@@ -51,14 +51,20 @@ def build_site() -> dict:
     html = html.replace('content="/api/data"', 'content="./data.json"')
     html = html.replace('href="/styles.css"', 'href="./styles.css"')
     html = html.replace('src="/app.js"', 'src="./app.js"')
+    html = html.replace('href="/security-demo.html"', 'href="./security-demo.html"')
     if 'content="./data.json"' not in html:
         raise RuntimeError("Dashboard HTML is missing its data-source metadata.")
     if 'href="./styles.css"' not in html or 'src="./app.js"' not in html:
         raise RuntimeError("Dashboard HTML asset paths could not be made Pages-compatible.")
 
     (OUTPUT_DIR / "index.html").write_text(html, encoding="utf-8")
-    for asset in ("styles.css", "app.js"):
+    for asset in ("styles.css", "app.js", "security-demo.css", "security-demo.js"):
         shutil.copy2(UI_DIR / asset, OUTPUT_DIR / asset)
+
+    security_html = (UI_DIR / "security-demo.html").read_text(encoding="utf-8")
+    security_html = security_html.replace('href="/security-demo.css"', 'href="./security-demo.css"')
+    security_html = security_html.replace('src="/security-demo.js"', 'src="./security-demo.js"')
+    (OUTPUT_DIR / "security-demo.html").write_text(security_html, encoding="utf-8")
 
     (OUTPUT_DIR / "data.json").write_text(
         json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
@@ -66,7 +72,7 @@ def build_site() -> dict:
     )
     (OUTPUT_DIR / ".nojekyll").write_text("", encoding="utf-8")
 
-    required = ("index.html", "styles.css", "app.js", "data.json", ".nojekyll")
+    required = ("index.html", "styles.css", "app.js", "data.json", "security-demo.html", "security-demo.css", "security-demo.js", ".nojekyll")
     missing = [name for name in required if not (OUTPUT_DIR / name).is_file()]
     if missing:
         raise RuntimeError(f"Static dashboard build is incomplete: {', '.join(missing)}")

@@ -5,7 +5,7 @@
 1. From the repository root, run `.\run_dashboard.ps1` on Windows or `sh ./run.sh` on macOS/Linux. The installed shell-profile shortcut is `run`.
 2. Confirm the launcher reports successful validation and export, then open the local dashboard URL.
 3. Confirm the **Project summary** appears and that the integrity panel does not show a warning.
-4. Use the **Dashboard screen** dropdown to navigate among the eleven views.
+4. Use the **Dashboard screen** dropdown to navigate among the eleven views, or open **Security Demo Center** from the dashboard toolbar and run the complete security exercise.
 
 ## Five-minute walkthrough
 
@@ -42,6 +42,12 @@
 Open a second terminal and run the commands in [encryption_demo.md](encryption_demo.md). Encrypt a copy of the trusted CSV, decrypt it to a separate output, and compare the restored bytes with the original. Then alter a byte in a copy of the encrypted file and show that authenticated decryption rejects it. The utility uses AES-256-GCM and scrypt; it is a standalone demonstration, not encryption integrated into the dashboard, GitHub Pages, or network transport.
 
 For the full assignment presentation, use [presentation_outline.md](presentation_outline.md). It includes a nine-part 8–10 minute sequence and concise summaries of all five selected research papers.
+
+## One-click security and incident-response demonstration
+
+Open **Security Demo Center** from the main dashboard and select **Run all security tests and scenarios**. This runs the trusted-data validation and SHA-256 checks, AES-256-GCM round-trip/fresh-parameter/wrong-passphrase/tamper tests, all currently mapped ATT&CK-related scenario variants, the six-phase response workflow, and a pairwise comparability audit. See [security_demo_center.md](security_demo_center.md) for exact coverage and limitations.
+
+The Valid Accounts/T1078 scenario is tabletop-only because the prototype has no login or account-audit service. The transmitted-data and visualization scenarios use synthetic payload/configuration fixtures; they do not perform network interception or change the deployed dashboard settings. Every mutation is isolated to temporary copies. The demo is not a penetration test and does not cover every MITRE ATT&CK technique.
 
 ## Offline fallback
 

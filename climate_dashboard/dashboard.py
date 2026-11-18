@@ -19,6 +19,9 @@ STATIC_FILES = {
     "/index.html": ("index.html", "text/html; charset=utf-8"),
     "/styles.css": ("styles.css", "text/css; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
+    "/security-demo.html": ("security-demo.html", "text/html; charset=utf-8"),
+    "/security-demo.js": ("security-demo.js", "text/javascript; charset=utf-8"),
+    "/security-demo.css": ("security-demo.css", "text/css; charset=utf-8"),
 }
 REQUIRED_FILES = (
     "trusted_data.csv",
@@ -179,6 +182,42 @@ class DashboardHandler(BaseHTTPRequestHandler):
         name, content_type = static_file
         content = (UI_DIR / name).read_bytes()
         self._send(200, content_type, content)
+
+    def do_POST(self) -> None:
+        route = urlsplit(self.path).path
+        if route != "/api/security-demo/run":
+            self._send(404, "text/plain; charset=utf-8", b"Not found")
+            return
+        if not self._is_local_request() or not self.headers.get("Origin"):
+            self._send(403, "text/plain; charset=utf-8", b"Forbidden")
+            return
+        if self.headers.get("Content-Type", "").split(";", 1)[0].strip().lower() != "application/json":
+            self._send(415, "text/plain; charset=utf-8", b"Content-Type must be application/json")
+            return
+        try:
+            content_length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            self._send(400, "text/plain; charset=utf-8", b"Invalid Content-Length")
+            return
+        if content_length < 2 or content_length > 1024:
+            self._send(413, "text/plain; charset=utf-8", b"Request body must be a small JSON object")
+            return
+        try:
+            request_body = json.loads(self.rfile.read(content_length))
+            if request_body != {}:
+                self._send(400, "text/plain; charset=utf-8", b"Unexpected request fields")
+                return
+            from climate_dashboard.security_demo import run_security_demo
+
+            result = run_security_demo()
+            payload = json.dumps(result).encode("utf-8")
+            self._send(200 if result["status"] == "PASS" else 503, "application/json; charset=utf-8", payload)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            self._send(400, "text/plain; charset=utf-8", b"Invalid JSON request")
+        except FileNotFoundError as exc:
+            self._send(503, "application/json; charset=utf-8", json.dumps({"error": str(exc)}).encode("utf-8"))
+        except (OSError, ValueError) as exc:
+            self._send(422, "application/json; charset=utf-8", json.dumps({"error": str(exc)}).encode("utf-8"))
 
     def log_message(self, format: str, *args: object) -> None:
         print(f"{self.address_string()} - {format % args}")

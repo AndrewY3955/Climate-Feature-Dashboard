@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Run the project's safe security checks, ATT&CK scenario exercises, comparability review, and incident-response recovery demonstration.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Security Demo Center · Climate-Feature Dashboard</title>
+  <link rel="stylesheet" href="/security-demo.css">
+  <script src="/security-demo.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to security demo</a>
+  <header>
+    <p class="eyebrow">Controlled classroom exercise · local only</p>
+    <h1>Security Demo Center</h1>
+    <p>Run the project's integrity, validation, encryption, ATT&amp;CK scenario, comparability, and six-phase recovery demonstrations from one place.</p>
+  </header>
+  <main id="main">
+    <nav class="top-nav" aria-label="Dashboard navigation">
+      <a href="/">Back to Climate-Feature Dashboard</a>
+    </nav>
+    <section class="notice" aria-label="Safety and scope">
+      <strong>Simulation boundary:</strong>
+      All changes are made to temporary copies or synthetic in-memory settings. The trusted dataset is not modified. These are defensive classroom exercises, not live attacks, penetration tests, or a live threat feed. The Valid Accounts scenario is tabletop-only because this prototype has no login or account-audit service.
+    </section>
+    <section class="run-panel" aria-labelledby="run-heading">
+      <div>
+        <p class="eyebrow">One-click demonstration</p>
+        <h2 id="run-heading">Run the complete security demonstration</h2>
+        <p>Runs the real project validation and hash checks, AES-256-GCM tests, all documented ATT&amp;CK-related scenarios, pairwise data comparability checks, and recovery workflow.</p>
+      </div>
+      <button id="run-all" type="button">Run all security tests and scenarios</button>
+      <p id="run-status" role="status" aria-live="polite">Ready. Start the local dashboard first, then run the demonstration.</p>
+    </section>
+    <section id="results" hidden aria-live="polite">
+      <h2>Execution results</h2>
+      <div id="summary" class="summary-grid"></div>
+      <section class="result-section">
+        <h3>Security control tests</h3>
+        <div class="table-wrap"><table id="tests-table"><thead><tr><th>Test</th><th>Status</th><th>Evidence</th></tr></thead><tbody></tbody></table></div>
+      </section>
+      <section class="result-section">
+        <h3>ATT&amp;CK and adversarial scenarios</h3>
+        <p class="muted">The three mapped techniques are T1078, T1565.001, and T1565.002. Multiple controlled variants exercise data alteration, omission, provenance loss, scope/unit changes, payload modification, and visualization filtering.</p>
+        <div id="scenario-list" class="scenario-list"></div>
+      </section>
+      <section class="result-section">
+        <h3>Like-for-like comparability audit</h3>
+        <p class="muted">Direct comparison requires matching metric, unit, data year, geography, facility/organizational scope, lifecycle boundary, calculation method, and data status. Company identity may differ. Any mismatch is flagged; unlike metrics or units are not silently normalized.</p>
+        <div id="comparison-summary" class="summary-grid"></div>
+        <div class="table-wrap"><table id="comparison-table"><thead><tr><th>Record A</th><th>Record B</th><th>Classification</th><th>Reason</th></tr></thead><tbody></tbody></table></div>
+      </section>
+      <section class="result-section">
+        <h3>Security boundaries and limitations</h3>
+        <ul id="limitations"></ul>
+      </section>
+    </section>
+    <footer>
+      <p>SHA-256 is a one-way integrity hash, not encryption. AES-256-GCM is demonstrated as standalone file encryption and does not encrypt dashboard storage, GitHub Pages, or network traffic. MFA, role-based access, central audit logging, independent manifest custody, and production key management are not deployed.</p>
+    </footer>
+  </main>
+</body>
+</html>

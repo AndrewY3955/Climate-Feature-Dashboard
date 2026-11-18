@@ -1,4 +1,5 @@
 const { test, expect } = require("@playwright/test");
+const fs = require("node:fs");
 const AxeBuilder = require("@axe-core/playwright").default;
 
 const viewIds = [
@@ -98,6 +99,36 @@ test("records search and source filters return correct result counts", async ({ 
   await page.locator("#record-search").fill("");
   await page.locator("#records-source-filter").selectOption("SRC001");
   await expect(page.locator("#records-table tbody tr")).toHaveCount(4);
+});
+
+test("filtered trusted records export to a valid UTF-8 CSV download", async ({ page }) => {
+  await page.locator("#screen-selector").selectOption("view-records");
+  await page.locator("#record-search").fill("OBS005");
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.locator("#download-records-csv").click(),
+  ]);
+  expect(download.suggestedFilename()).toBe("trusted-records-filtered.csv");
+  const filePath = await download.path();
+  const csv = fs.readFileSync(filePath, "utf8");
+  expect(csv.startsWith("\\uFEFF")).toBe(true);
+  expect(csv).toContain("OBS005");
+  expect(csv).not.toContain("OBS001");
+});
+
+test("print layout hides controls and expands wide tables", async ({ page }) => {
+  await page.locator("#screen-selector").selectOption("view-records");
+  await page.emulateMedia({ media: "print" });
+  const printStyles = await page.evaluate(() => ({
+    overflow: getComputedStyle(document.querySelector(".table-scroll")).overflow,
+    picker: getComputedStyle(document.querySelector(".screen-picker")).display,
+    activeView: getComputedStyle(document.querySelector("#view-records")).display,
+    inactiveView: getComputedStyle(document.querySelector("#view-overview")).display,
+  }));
+  expect(printStyles.overflow).toBe("visible");
+  expect(printStyles.picker).toBe("none");
+  expect(printStyles.activeView).not.toBe("none");
+  expect(printStyles.inactiveView).toBe("none");
 });
 
 test("deep links select a valid view and invalid hashes fall back safely", async ({ page, baseURL }) => {

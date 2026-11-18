@@ -5,7 +5,7 @@ const statusLine = document.querySelector("#run-status");
 const results = document.querySelector("#results");
 
 const isLocalDemo = ["127.0.0.1", "localhost"].includes(window.location.hostname);
-if (!isLocalDemo) {
+if (!isLocalDemo || document.documentElement.dataset.demoMode === "read-only") {
   runButton.disabled = true;
   statusLine.textContent = "This GitHub Pages copy is read-only. Start the local dashboard with .\\\\run.ps1 (Windows) or sh ./run.sh, then open the Security Demo Center on 127.0.0.1 to execute the tests.";
 }

@@ -111,7 +111,7 @@ test("filtered trusted records export to a valid UTF-8 CSV download", async ({ p
   expect(download.suggestedFilename()).toBe("trusted-records-filtered.csv");
   const filePath = await download.path();
   const csv = fs.readFileSync(filePath, "utf8");
-  expect(csv.startsWith("\\uFEFF")).toBe(true);
+  expect(csv.startsWith("\uFEFF")).toBe(true);
   expect(csv).toContain("OBS005");
   expect(csv).not.toContain("OBS001");
 });

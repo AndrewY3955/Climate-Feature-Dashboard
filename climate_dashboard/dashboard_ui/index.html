@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="A multi-view dashboard for semiconductor climate indicators, source provenance, threat references, and data integrity.">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; upgrade-insecure-requests">
     <meta name="dashboard-data" content="/api/data">
     <title>Semiconductor Climate Data Dashboard</title>
     <link rel="stylesheet" href="/styles.css">
@@ -171,6 +172,7 @@
             <input id="record-search" type="search" placeholder="Organization, metric, source, geography…" autocomplete="off">
           </label>
         </div>
+        <p id="records-result-count" class="chart-note" role="status" aria-live="polite"></p>
         <div class="table-card">
           <div class="table-scroll" role="region" aria-label="Records and provenance table; scroll horizontally to view all columns" tabindex="0"><table id="records-table"></table></div>
         </div>
@@ -183,6 +185,7 @@
             <h2>Reports &amp; studies</h2>
           </div>
         </div>
+        <p class="section-copy">Browse five registered publisher reports and five selected full-text research-paper records. Each paper includes its citation, DOI/stable link, research scope, findings, limitations, relevance to this dashboard, and review notes. Research papers provide context; they are not added as measured observations.</p>
         <div class="filters">
           <label>Information type
             <select id="context-type-filter" disabled>
@@ -194,6 +197,7 @@
             <select id="context-item-filter" disabled></select>
           </label>
         </div>
+        <p id="context-result-count" class="chart-note" role="status" aria-live="polite"></p>
         <div id="context-detail" class="context-detail" aria-live="polite"></div>
         <div class="table-card">
           <h3 id="context-table-title">Registered sources</h3>
@@ -231,7 +235,11 @@
             <h2>Security controls</h2>
           </div>
         </div>
-        <p class="section-copy">Filter controls by deployment state. Local prototype features are distinguished from controls that require a shared identity or hosting platform.</p>
+        <p class="section-copy">Filter controls by deployment state. Local prototype features are distinguished from controls that require a shared identity or hosting platform. The status is specific to the evidence and scope shown; a standalone demonstration is not a production service.</p>
+        <aside class="notice notice-subtle">
+          <strong>Status definitions:</strong>
+          Implemented means the control exists in the stated local-project scope; it does not imply enterprise deployment. Documented manual means a review procedure is described but not technically enforced. Recommended means the control is not deployed. The counts below are calculated from the nine control records.
+        </aside>
         <aside class="notice notice-subtle">
           <strong>Encryption demonstration:</strong>
           The repository includes a standalone AES-256-GCM file-encryption utility at <code>scripts/encryption_demo.py</code>. It demonstrates authenticated encryption and tamper rejection on a separate file; it does not encrypt this dashboard's storage or network traffic. See <code>docs/encryption_demo.md</code> for the reproducible demo.
@@ -239,8 +247,9 @@
         <label>Control status
           <select id="control-status-filter" disabled></select>
         </label>
-        <div id="control-summary" class="summary-grid"></div>
-        <div id="control-cards" class="context-card-grid"></div>
+        <div id="control-summary" class="summary-grid" aria-live="polite"></div>
+        <p id="control-result-count" class="chart-note" role="status" aria-live="polite"></p>
+        <div id="control-cards" class="context-card-grid" aria-live="polite"></div>
       </section>
 
       <section class="view-panel" id="view-response" aria-label="Incident response" hidden>

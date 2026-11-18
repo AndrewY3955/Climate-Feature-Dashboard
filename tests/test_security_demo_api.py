@@ -80,3 +80,31 @@ def test_security_demo_endpoint_rejects_unexpected_request_fields(monkeypatch):
         server.shutdown()
         server.server_close()
         thread.join(timeout=3)
+
+
+
+def test_security_demo_endpoint_returns_actionable_error_when_dependency_missing(monkeypatch):
+    import builtins
+
+    original_import = builtins.__import__
+
+    def fail_security_demo_import(name, *args, **kwargs):
+        if name == "climate_dashboard.security_demo":
+            raise ModuleNotFoundError("No module named 'cryptography'", name="cryptography")
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", fail_security_demo_import)
+    server = ThreadingHTTPServer(("127.0.0.1", 0), DashboardHandler)
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    port = server.server_port
+    try:
+        status, payload = _request(port, f"http://127.0.0.1:{port}")
+        assert status == 503
+        result = json.loads(payload)
+        assert "cryptography" in result["error"]
+        assert "run.ps1" in result["error"]
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)

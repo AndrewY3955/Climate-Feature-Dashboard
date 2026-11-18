@@ -46,6 +46,10 @@ SCENARIO_CATALOG = [
         "technique_name": "Valid Accounts",
         "title": "Compromised contributor account",
         "description": "A contributor identity is assumed compromised and used to request an unauthorized change.",
+        "attack_vector": "Misuse of a valid contributor identity to request an unauthorized change (assumed, not technically executed).",
+        "simulated_change": "No account, credential, repository permission, or audit record is changed; the identity compromise is a tabletop assumption.",
+        "defense_used": "Tabletop response: preserve repository evidence; recommend MFA, least privilege, protected audit logs, and independent approval. These controls are not deployed by this prototype.",
+        "result_basis": "TABLETOP ONLY — response steps discussed; no technical account-compromise detection or prevention was tested.",
         "mode": "tabletop",
         "detection": "No authentication service or account-audit telemetry is deployed in this local prototype; technical detection is not claimed.",
         "control": "Use MFA, least privilege, protected repository audit logs, and independent approval in a real hosted deployment.",
@@ -56,6 +60,10 @@ SCENARIO_CATALOG = [
         "technique_name": "Stored Data Manipulation",
         "title": "Environmental value altered",
         "description": "Increase a copied energy observation by 50 percent.",
+        "attack_vector": "Stored record value tampering (MITRE ATT&CK T1565.001).",
+        "simulated_change": "Increase the value field of one copied energy observation by 50%; the trusted CSV remains unchanged.",
+        "defense_used": "Compare the altered copy's SHA-256 with the trusted baseline; preserve the changed bytes in an in-memory quarantine; restore trusted bytes and validate the restored dataset. Record-level review is a recommended follow-up, not a separate automated detector in this scenario.",
+        "result_basis": "PASS when the digest mismatch detects the altered copy and the trusted-byte recovery digest and schema validation pass.",
         "mode": "data",
         "control": "Compare the changed file with the protected trusted digest and record-level baseline.",
     },
@@ -65,6 +73,10 @@ SCENARIO_CATALOG = [
         "technique_name": "Stored Data Manipulation",
         "title": "Environmental records deleted",
         "description": "Remove water observations from a copied dataset; removed is not zero.",
+        "attack_vector": "Stored record deletion / omission (MITRE ATT&CK T1565.001).",
+        "simulated_change": "Remove copied water-observation rows and retain their record IDs in the scenario evidence; trusted records remain intact.",
+        "defense_used": "The SHA-256 baseline comparison detects the changed file; quarantine the altered bytes and restore trusted bytes. Record-ID, row-count, and feature-coverage review are recommended follow-up checks, not separate automated detectors in this scenario.",
+        "result_basis": "PASS when the altered-copy digest differs and restored trusted bytes match the baseline and pass schema validation.",
         "mode": "data",
         "control": "Compare record IDs, row counts, feature coverage, and the trusted digest.",
     },
@@ -74,6 +86,10 @@ SCENARIO_CATALOG = [
         "technique_name": "Stored Data Manipulation",
         "title": "Source attribution removed",
         "description": "Blank a source label while retaining the original trusted record.",
+        "attack_vector": "Stored provenance / source-attribution tampering (MITRE ATT&CK T1565.001).",
+        "simulated_change": "Blank the source_name field on one copied observation; the original trusted record is preserved.",
+        "defense_used": "The SHA-256 baseline comparison detects the changed file; quarantine the altered bytes and restore trusted bytes. Required-source and provenance validation are recommended follow-up controls, not separately demonstrated detection in this scenario.",
+        "result_basis": "PASS when the altered copy is detected and the restored trusted dataset passes digest and schema checks.",
         "mode": "data",
         "control": "Validate required provenance and compare the record with the trusted source copy.",
     },
@@ -83,6 +99,10 @@ SCENARIO_CATALOG = [
         "technique_name": "Stored Data Manipulation",
         "title": "Unit or reporting boundary changed",
         "description": "Change a unit or geography/boundary label without changing the source report.",
+        "attack_vector": "Stored unit / reporting-scope tampering (MITRE ATT&CK T1565.001).",
+        "simulated_change": "Change the unit field on one copied observation (for example, MWh to kg) without changing the source report.",
+        "defense_used": "The SHA-256 baseline comparison detects the changed file; quarantine the altered bytes and restore trusted bytes. Metric-unit and reporting-scope validation are recommended follow-up controls, not separately demonstrated detection in this scenario.",
+        "result_basis": "PASS when the changed copy is detected and restored trusted bytes pass digest and schema checks.",
         "mode": "data",
         "control": "Validate metric-unit pairs and compare year, geography, facility scope, and lifecycle boundary.",
     },
@@ -92,6 +112,10 @@ SCENARIO_CATALOG = [
         "technique_name": "Transmitted Data Manipulation",
         "title": "Data payload altered in transit",
         "description": "Change bytes in a simulated transfer payload and compare it with the sender-side digest.",
+        "attack_vector": "In-transit payload modification (MITRE ATT&CK T1565.002); simulated bytes only, not a live network interception.",
+        "simulated_change": "Alter one value sequence in a synthetic transfer payload; no network traffic or deployed transport path is modified.",
+        "defense_used": "Compare the received payload digest with the sender-side trusted digest; preserve the altered payload in memory and recover the original trusted bytes.",
+        "result_basis": "PASS when the payload digest mismatch is detected and the original trusted-byte digest is verified after recovery.",
         "mode": "payload",
         "control": "Authenticate the transfer channel and verify a digest or signature from an independently trusted sender.",
     },
@@ -101,6 +125,10 @@ SCENARIO_CATALOG = [
         "technique_name": "Stored Data Manipulation",
         "title": "Visualization hides an unfavorable category",
         "description": "Change a synthetic chart-filter configuration so water records are excluded from the view.",
+        "attack_vector": "Report / visualization configuration manipulation (mapped to MITRE ATT&CK T1565.001 as a stored-data integrity scenario; not a dedicated visualization technique claim).",
+        "simulated_change": "Set include_water from true to false in a synthetic in-memory chart configuration; deployed dashboard filters are not changed.",
+        "defense_used": "Compare the synthetic configuration bytes with the original configuration digest, preserve the altered configuration in memory, and restore the original synthetic configuration. This does not test the deployed dashboard filters.",
+        "result_basis": "PASS when the synthetic configuration change is identified and the original configuration is restored; this does not test deployed dashboard visuals.",
         "mode": "visual",
         "control": "Review report filters, visual interactions, axis ranges, labels, and the underlying expected feature inventory.",
     },
@@ -240,6 +268,7 @@ def _response_exercise(scenario: dict[str, Any], trusted_bytes: bytes) -> dict[s
             "status": "TABLETOP ONLY",
             "detected": None,
             "detail": scenario["detection"],
+            "result": scenario["result_basis"],
             "phases": [
                 {"phase": phase, "status": "EXERCISED", "action": action}
                 for phase, action in RESPONSE_PHASES
@@ -248,7 +277,14 @@ def _response_exercise(scenario: dict[str, Any], trusted_bytes: bytes) -> dict[s
         }
 
     mutated_bytes, detail = _mutate_scenario(scenario["scenario_id"], trusted_bytes)
-    expected_hash = _sha256(trusted_bytes)
+    recovery_baseline = trusted_bytes
+    if scenario["mode"] == "visual":
+        recovery_baseline = json.dumps({
+            "view": "environmental-observations",
+            "filters": {"year": "all", "metric": "all", "include_water": True},
+            "axis": "reported value with unit",
+        }, sort_keys=True).encode("utf-8")
+    expected_hash = _sha256(recovery_baseline)
     actual_hash = _sha256(mutated_bytes)
     detected = expected_hash != actual_hash
 
@@ -262,7 +298,7 @@ def _response_exercise(scenario: dict[str, Any], trusted_bytes: bytes) -> dict[s
     working_copy = None
     eradicated = working_copy is None
 
-    restored_bytes = bytes(trusted_bytes)
+    restored_bytes = bytes(recovery_baseline)
     restored_hash = _sha256(restored_bytes)
     recovery_verified = restored_hash == expected_hash
 
@@ -284,6 +320,7 @@ def _response_exercise(scenario: dict[str, Any], trusted_bytes: bytes) -> dict[s
         "status": "PASS" if detected and quarantined and eradicated and recovery_verified and validation_status in ("PASS", "NOT APPLICABLE") else "FAIL",
         "detected": detected,
         "detail": detail,
+        "result": scenario["result_basis"] if detected and quarantined and eradicated and recovery_verified and validation_status in ("PASS", "NOT APPLICABLE") else "FAIL — one or more detection, quarantine, eradication, recovery, or validation checks did not pass.",
         "expected_sha256": expected_hash,
         "simulated_sha256": actual_hash,
         "phases": phases,

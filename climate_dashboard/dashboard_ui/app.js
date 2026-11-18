@@ -62,6 +62,9 @@ const tableColumns = {
     ["technique_id", "ATT&CK ID"],
     ["technique_name", "Technique"],
     ["coverage_status", "Project status"],
+    ["attack_vector", "Attack vector / scope"],
+    ["defensive_control", "Defensive control"],
+    ["project_evidence", "Demonstration evidence"],
     ["relevance", "Scenario relevance"],
   ],
 };
@@ -671,8 +674,10 @@ function renderThreatIntel() {
     renderDetails(detail, `${item.technique_id} · ${item.technique_name}`, [
       ["Framework", item.framework],
       ["Scenario relevance", item.relevance],
+      ["Attack vector", item.attack_vector],
       ["Project evidence", item.project_evidence],
       ["Coverage status", item.coverage_status],
+      ["Defensive interpretation", item.defensive_control],
       ["Confidence and attribution", item.confidence_note],
     ]);
     const linkArea = make("p", "source-link");

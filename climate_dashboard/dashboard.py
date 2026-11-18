@@ -216,8 +216,26 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self._send(400, "text/plain; charset=utf-8", b"Invalid JSON request")
         except FileNotFoundError as exc:
             self._send(503, "application/json; charset=utf-8", json.dumps({"error": str(exc)}).encode("utf-8"))
+        except ImportError as exc:
+            message = (
+                "A required security-demo dependency is unavailable: "
+                f"{exc.name or str(exc)}. Stop the dashboard and rerun .\\\\run.ps1 "
+                "so the launcher can install requirements.txt."
+            )
+            self._send(
+                503,
+                "application/json; charset=utf-8",
+                json.dumps({"error": message}).encode("utf-8"),
+            )
         except (OSError, ValueError) as exc:
             self._send(422, "application/json; charset=utf-8", json.dumps({"error": str(exc)}).encode("utf-8"))
+        except Exception:
+            self.log_error("Unexpected error while running the security demonstration")
+            self._send(
+                500,
+                "application/json; charset=utf-8",
+                json.dumps({"error": "The security demonstration encountered an internal error. Check the server console for details."}).encode("utf-8"),
+            )
 
     def log_message(self, format: str, *args: object) -> None:
         print(f"{self.address_string()} - {format % args}")

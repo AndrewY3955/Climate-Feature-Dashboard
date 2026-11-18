@@ -107,6 +107,7 @@ Synthetic test data and manipulated records are separate from the reviewed obser
 - [Security policy](SECURITY.md)
 - [Optional Power BI setup](docs/power_bi_setup.md)
 - [Dashboard evidence screenshots](evidence/README.md)
+- [AES-GCM encryption demonstration](docs/encryption_demo.md)
 
 ## Tests
 

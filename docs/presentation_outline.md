@@ -1,5 +1,15 @@
 # Final presentation and live demonstration outline
 
+## Executable attack-lab behavior
+
+The current Security Demo Center runs each technical attack as a separate Python child process against a disposable file in a newly created temporary directory. The child process is passed only the lab target path and executes a fixed scenario-specific mutation; it does not receive a production-data path, credentials, or a network target. This is an isolated local attack exercise, not an exploit against the deployed dashboard or an OS-level sandbox.
+
+For each technical scenario, the defender records the trusted file's SHA-256, runs the attacker process, reads the changed target, compares the new digest with the trusted baseline, copies the altered bytes into a quarantine-evidence file, deletes the altered working target, restores the trusted baseline, and verifies the recovered digest. CSV scenarios also rerun the project's schema/source validation after recovery. The UI reports the child-process exit code and output, before/after/quarantine/recovery hashes, detection result, and incident-response phases.
+
+**How to present this accurately:** show the attacker process output and hash transition first; then show the defender's detected digest mismatch, quarantined evidence, eradication, and recovery hash matching the original. The target is a disposable lab copy, not the live dashboard dataset. The payload scenario modifies a local transfer fixture, not live network traffic. The visualization scenario changes a lab configuration file, not the deployed dashboard's active configuration. Valid Accounts (T1078) remains tabletop-only because the application has no authentication service or account-audit telemetry.
+
+A PASS means the isolated attack process executed, the modified target was detected by the SHA-256 comparison, quarantine and eradication completed, trusted bytes were restored, and applicable validation passed. It does not mean the production application resisted an external attacker.
+
 This outline maps the assignment's presentation requirements to a concise, reproducible live demonstration. It is a speaker outline, not a claim that a slide deck or recording already exists.
 
 ## Security demonstration results: findings and interpretation

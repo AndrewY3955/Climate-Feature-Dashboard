@@ -200,12 +200,11 @@ test("mobile, tablet, and desktop layouts do not overflow the viewport", async (
               scrollWidth: element.scrollWidth,
               clientWidth: element.clientWidth,
               overflowX: getComputedStyle(element).overflowX,
+              inTableScroll: Boolean(element.closest(".table-scroll")),
             };
           })
           .filter((element) => element.right > window.innerWidth + 1 || element.left < -1)
-          .filter((element) => !document.querySelector(".table-scroll")?.contains(
-            document.getElementById(element.id) || null
-          ))
+          .filter((element) => !element.inTableScroll)
           .slice(0, 20),
       }));
       expect(dimensions.document, `${viewId} at ${viewport.width}px; ${JSON.stringify(dimensions.offenders)}`).toBeLessThanOrEqual(dimensions.viewport);

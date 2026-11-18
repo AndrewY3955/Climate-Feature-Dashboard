@@ -42,6 +42,7 @@
             <option value="view-comparison">Adversarial comparison</option>
           </select>
         </label>
+        <button id="print-current-view" type="button">Print current view</button>
       </div>
 
       <p id="integrity-alert" class="error-message" role="alert" hidden></p>
@@ -171,6 +172,9 @@
           <label class="search-label">Search records
             <input id="record-search" type="search" placeholder="Organization, metric, source, geography…" autocomplete="off">
           </label>
+        </div>
+        <div class="filter-actions">
+          <button id="download-records-csv" type="button" disabled>Download filtered records CSV</button>
         </div>
         <p id="records-result-count" class="chart-note" role="status" aria-live="polite"></p>
         <div class="table-card">

@@ -5,7 +5,7 @@
 **Final Project Report**
 **Climate-Feature Dashboard for Semiconductor Technology**
 Course project on climate literacy, threat intelligence, cybersecurity, data integrity, and incident response
-Prepared: October 20, 2026
+Prepared: November 17, 2026
 
 ## 2. Abstract or Executive Summary
 
@@ -151,7 +151,8 @@ These are project responsibilities and recommendations; identities, remote acces
 | Loopback-only, read-only local dashboard | Implemented | Remote exposure and browser-side file writes | No authentication, TLS, authorization, or enterprise audit. |
 | Source-register linkage in Power BI export | Implemented and tested | Observations with unresolved source IDs | Publisher identity and source reliability still require human review. |
 | MFA, least privilege, access audit, protected backups | Recommended | Account misuse and recovery gaps | Not deployed; requires shared hosting controls. |
-| Filter/axis/label/report-version review | Documented manual review | Visualization-only manipulation | No native Power BI report/workspace is included. |\n| AES-256-GCM authenticated file-encryption demo | Implemented as a standalone utility and tested | Demonstrates confidentiality and ciphertext tamper rejection | Does not encrypt dashboard storage, GitHub Pages content, network traffic, or production backups; passphrase/key custody remains external. |
+| Filter/axis/label/report-version review | Documented manual review | Visualization-only manipulation | No native Power BI report/workspace is included. |
+| AES-256-GCM authenticated file-encryption demo | Implemented as a standalone utility and tested | Demonstrates confidentiality and ciphertext tamper rejection | Does not encrypt dashboard storage, GitHub Pages content, network traffic, or production backups; passphrase/key custody remains external. |
 
 ## 20. Incident-Response Process
 
@@ -272,4 +273,4 @@ The data support transparent reporting of selected disclosed indicators—not a 
 
 - *Climate-Feature Dashboard for Semiconductor Technology* assignment instructions. [`project_instructions.pdf`](project_instructions.pdf).
 - Project source register, observation register, and paper register: `data/intake/sources_template.csv`, `data/intake/observations_template.csv`, and `data/intake/papers_template.csv`.
-- Project methods and evidence: [`data_source_plan.md`](data_source_plan.md), [`data_dictionary.md`](data_dictionary.md), [`literature_review.md`](literature_review.md), [`threat_model.md`](threat_model.md), [`incident_response.md`](incident_response.md), [`system_architecture.md`](system_architecture.md), [`manipulation_comparison.md`](manipulation_comparison.md), and [`power_bi_setup.md`](power_bi_setup.md), [`environmental_feature_coverage.md`](environmental_feature_coverage.md), and [`encryption_demo.md`](encryption_demo.md).
+- Project methods and evidence: [`data_source_plan.md`](data_source_plan.md), [`data_dictionary.md`](data_dictionary.md), [`literature_review.md`](literature_review.md), [`threat_model.md`](threat_model.md), [`incident_response.md`](incident_response.md), [`system_architecture.md`](system_architecture.md), [`manipulation_comparison.md`](manipulation_comparison.md), [`power_bi_setup.md`](power_bi_setup.md), [`environmental_feature_coverage.md`](environmental_feature_coverage.md), and [`encryption_demo.md`](encryption_demo.md).

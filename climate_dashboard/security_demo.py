@@ -366,9 +366,10 @@ else:
                 cwd=lab_dir,
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=5,
                 check=False,
-                env={"PYTHONIOENCODING": "utf-8"},
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
             return {

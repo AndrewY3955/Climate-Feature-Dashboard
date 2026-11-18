@@ -81,3 +81,16 @@ def test_dashboard_avoids_html_string_injection_and_uses_safe_external_links():
     assert "new Function(" not in script
     assert 'link.rel = "noopener noreferrer"' in script
     assert 'parsed.protocol !== "https:"' in script
+
+
+def test_dashboard_exposes_csv_export_and_print_styles():
+    html = (UI / "index.html").read_text(encoding="utf-8")
+    css = (UI / "styles.css").read_text(encoding="utf-8")
+    script = (UI / "app.js").read_text(encoding="utf-8")
+    assert 'id="download-records-csv"' in html
+    assert 'id="print-current-view"' in html
+    assert "@media print" in css
+    assert "overflow: visible !important" in css
+    assert "function downloadCsv(filename, rows)" in script
+    assert "text.replace(/\\"/g, '\"\"')" in script
+    assert 'download: filename' in script

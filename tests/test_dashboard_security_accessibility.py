@@ -58,7 +58,7 @@ def test_reports_and_studies_exposes_all_review_fields_and_safe_doi_links():
     script = (UI / "app.js").read_text(encoding="utf-8")
     assert '["DOI / stable URL", paper.doi_or_stable_url]' in script
     assert 'addSafeLink(linkArea, paper.doi_or_stable_url, "Open DOI / stable publisher record")' in script
-    assert 'dashboardData.papers.length < 5' in script
+    assert 'payload.papers.length < 5' in script
     assert 'paper.peer_review_evidence' in script
     assert 'paper.limitations' in script
     assert 'options[0]?.value' in script

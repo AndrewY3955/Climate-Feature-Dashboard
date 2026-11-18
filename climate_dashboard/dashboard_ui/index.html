@@ -31,6 +31,7 @@
             <option value="view-summary">Project summary</option>
             <option value="view-overview">Environmental data</option>
             <option value="view-measures">Measure guide</option>
+            <option value="view-feature-coverage">Environmental feature coverage</option>
             <option value="view-records">Records &amp; provenance</option>
             <option value="view-context">Reports &amp; studies</option>
             <option value="view-threats">Threat intelligence</option>
@@ -130,6 +131,27 @@
         <div class="table-card">
           <h3>What the reviewed dataset contains</h3>
           <div class="table-scroll" role="region" aria-label="Measure inventory table; scroll horizontally to view all columns" tabindex="0"><table id="measure-inventory-table"></table></div>
+        </div>
+      </section>
+
+      <section class="view-panel" id="view-feature-coverage" aria-label="Environmental feature coverage" hidden>
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Assignment scope and evidence coverage</p>
+            <h2>Environmental feature coverage</h2>
+          </div>
+          <span class="status-pill status-warning">Bounded evidence set</span>
+        </div>
+        <p class="section-copy">This view accounts for the environmental and technology features named in the assignment. It distinguishes source-backed observations from research context and features not collected; absence must never be interpreted as zero impact.</p>
+        <div id="feature-coverage-summary" class="summary-grid" aria-live="polite"></div>
+        <div class="notice notice-subtle">
+          <strong>How to read the statuses:</strong>
+          Measured means at least one reviewed source-backed observation exists. Partial means only part of the feature is measured or the geographic/organizational coverage is limited. Research context means the literature discusses the feature but no project observation measures it. Not collected means the current evidence set does not measure it or provide sufficient feature-specific evidence. No estimate or derived value is currently added to fill these gaps.
+        </div>
+        <div class="table-card">
+          <h3>Feature-by-feature accounting</h3>
+          <p class="chart-note">Record counts refer to the seven trusted observations. Research-paper discussion is not a substitute for a measured company or facility observation.</p>
+          <div class="table-scroll" role="region" aria-label="Environmental feature coverage table; scroll horizontally to view all columns" tabindex="0"><table id="feature-coverage-table"></table></div>
         </div>
       </section>
 

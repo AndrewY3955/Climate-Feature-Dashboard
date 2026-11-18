@@ -63,6 +63,7 @@ const tableColumns = {
     ["technique_name", "Technique"],
     ["coverage_status", "Project status"],
     ["attack_vector", "Attack vector / scope"],
+    ["defensive_control", "Defensive control"],
     ["project_evidence", "Demonstration evidence"],
     ["relevance", "Scenario relevance"],
   ],

@@ -21,14 +21,14 @@
       <a href="/">Back to Climate-Feature Dashboard</a>
     </nav>
     <section class="notice" aria-label="Safety and scope">
-      <strong>Simulation boundary:</strong>
-      All changes are made to temporary copies or synthetic in-memory settings. The trusted dataset is not modified. These are defensive classroom exercises, not live attacks, penetration tests, or a live threat feed. The Valid Accounts scenario is tabletop-only because this prototype has no login or account-audit service.
+      <strong>Isolated attack-lab boundary:</strong>
+      Technical scenarios launch a real attacker child process against disposable files inside a temporary directory. The defender then hashes the modified target, quarantines the evidence, removes the altered working file, restores the trusted baseline, and verifies recovery. No production project file, credential, external host, or network target is accessed. Valid Accounts remains tabletop-only because this prototype has no authentication or account-audit service. This is not a penetration test of the deployed application.
     </section>
     <section class="run-panel" aria-labelledby="run-heading">
       <div>
         <p class="eyebrow">One-click demonstration</p>
         <h2 id="run-heading">Run the complete security demonstration</h2>
-        <p>Runs the real project validation and hash checks, AES-256-GCM tests, all documented ATT&amp;CK-related scenarios, pairwise data comparability checks, and recovery workflow.</p>
+        <p>Runs project validation and cryptographic checks, then launches isolated attacker processes for the stored-data, payload, and configuration scenarios. Each technical run records the actual target hash change, defender detection, quarantine, eradication, trusted-baseline recovery, and post-recovery validation. Account compromise remains tabletop-only.</p>
       </div>
       <button id="run-all" type="button">Run all security tests and scenarios</button>
       <p id="run-status" role="status" aria-live="polite">Ready. Start the local dashboard first, then run the demonstration.</p>
@@ -42,7 +42,7 @@
       </section>
       <section class="result-section">
         <h3>ATT&amp;CK and adversarial scenarios</h3>
-        <p class="muted">Each scenario labels its attack vector, ATT&amp;CK mapping, exact synthetic change, defensive control exercised, observed evidence, and result. T1078 is tabletop-only; T1565.001 covers stored-data changes; T1565.002 covers a synthetic payload-integrity exercise. These are controlled simulations, not live attacks.</p>
+        <p class="muted">Each technical scenario executes an attacker child process against a disposable local lab file. Results include the attacker process exit code/output, before-and-after SHA-256 values, detection, quarantine evidence hash, eradication, and recovery hash. T1078 remains tabletop-only. No external system or production asset is attacked.</p>
         <div id="scenario-list" class="scenario-list"></div>
       </section>
       <section class="result-section">

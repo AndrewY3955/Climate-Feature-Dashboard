@@ -202,6 +202,11 @@ const activeLabEvidenceStatus = document.querySelector("#active-lab-evidence-sta
 const downloadActiveEvidence = document.querySelector("#download-active-evidence");
 let activeEvidenceBundle = null;
 
+if (!isLocalDemo || document.documentElement.dataset.demoMode === "read-only") {
+  activeLabButton.disabled = true;
+  activeLabStatus.textContent = "This GitHub Pages copy is read-only. Start the local dashboard with .\\\\run.ps1 (Windows) or sh ./run.sh, then run the live exercise on 127.0.0.1.";
+}
+
 function addActiveSummary(label, value) {
   const card = document.createElement("article");
   card.className = "summary-card";

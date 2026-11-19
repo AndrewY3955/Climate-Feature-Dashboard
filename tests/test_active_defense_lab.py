@@ -18,6 +18,9 @@ def test_live_attacker_process_is_blocked_and_credential_revoked(tmp_path):
     assert evidence["attacker_process"]["executed"] is True
     assert evidence["attacker_process"]["exit_code"] == 0
     assert evidence["attacker_process"]["pid"] > 0
+    assert evidence["attacker_process"]["reported_pid"] == evidence["attacker_process"]["pid"]
+    assert evidence["attacker_process"]["pid_matches_os_process"] is True
+    assert evidence["attacker_process"]["audit_pid_matches_os_pid"] is True
     assert evidence["attacker_process"]["transport"] == "HTTP over loopback TCP"
     requests = evidence["attacker_process"]["requests"]
     assert [item["http_status"] for item in requests] == [200, 403, 401]

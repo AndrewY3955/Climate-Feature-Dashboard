@@ -148,13 +148,19 @@ def verify_event_chain(events: list[dict[str, Any]]) -> bool:
 
 
 def verify_evidence_bundle(bundle: dict[str, Any]) -> bool:
+    if not isinstance(bundle, dict):
+        return False
     supplied = bundle.get("report_sha256")
     unsigned = dict(bundle)
     unsigned.pop("report_sha256", None)
+    events = bundle.get("audit_events")
     return (
         isinstance(supplied, str)
         and supplied == _sha256(_canonical(unsigned))
-        and verify_event_chain(bundle.get("audit_events", []))
+        and isinstance(events, list)
+        and bool(events)
+        and verify_event_chain(events)
+        and bundle.get("audit_chain_verified") is True
     )
 
 

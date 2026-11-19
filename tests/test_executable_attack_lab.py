@@ -2,7 +2,6 @@ from climate_dashboard.security_demo import _response_exercise
 
 
 def test_payload_attack_executes_child_process_and_recovers_trusted_bytes():
-    trusted = b"27456000"
     scenario = {
         "scenario_id": "transmitted-payload",
         "mode": "payload",
@@ -10,7 +9,7 @@ def test_payload_attack_executes_child_process_and_recovers_trusted_bytes():
         "result_basis": "PASS when modified payload is detected and recovered.",
     }
 
-    result = _response_exercise(scenario, trusted)
+    result = _response_exercise(scenario)
 
     assert result["status"] == "PASS"
     assert result["attack_execution"]["executed"] is True
@@ -19,7 +18,6 @@ def test_payload_attack_executes_child_process_and_recovers_trusted_bytes():
     assert result["attack_execution"]["quarantine_sha256"] == result["attack_execution"]["after_sha256"]
     assert result["attack_execution"]["recovery_sha256"] == result["attack_execution"]["before_sha256"]
     assert result["recovery_verified"] is True
-    assert trusted == b"27456000"
 
 
 def test_visualization_attack_executes_child_process_and_recovers_configuration():
@@ -30,7 +28,7 @@ def test_visualization_attack_executes_child_process_and_recovers_configuration(
         "result_basis": "PASS when configuration is detected and restored.",
     }
 
-    result = _response_exercise(scenario, b"unused dataset bytes")
+    result = _response_exercise(scenario)
 
     assert result["status"] == "PASS"
     assert result["attack_execution"]["executed"] is True

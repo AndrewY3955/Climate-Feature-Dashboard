@@ -49,7 +49,7 @@ Each run records:
 - Ordered audit events with timestamps, principal, method, route, HTTP status, process ID, decision, state digest, previous-event digest, and event digest
 - Final outcome, audit-chain verification, report digest, and saved evidence-file digest
 
-The evidence bundle is reproducible and self-checking: the verifier recomputes the event chain and report SHA-256. A plain hash is not a digital signature. If evidence must prove authenticity to an independent third party, preserve the report digest in a separately controlled system or add a separately managed signing key.
+The evidence bundle is reproducible and self-checking: the verifier recomputes the event chain and report SHA-256. The CI workflow also runs the live scenario after the test matrix passes, verifies the generated report, and uploads the JSON report as a 30-day GitHub Actions artifact for that commit. A plain hash is not a digital signature. If evidence must prove authenticity to an independent third party, preserve the report digest in a separately controlled system or add a separately managed signing key.
 
 ## Security boundaries
 

@@ -122,13 +122,25 @@ class AuditTrail:
 
 
 def verify_event_chain(events: list[dict[str, Any]]) -> bool:
+    if not isinstance(events, list):
+        return False
     previous = "0" * 64
     for index, supplied in enumerate(events, start=1):
+        if not isinstance(supplied, dict):
+            return False
         event = dict(supplied)
         claimed = event.pop("event_sha256", None)
-        if event.get("sequence") != index or event.get("previous_event_sha256") != previous:
+        if (
+            event.get("sequence") != index
+            or event.get("previous_event_sha256") != previous
+            or not isinstance(claimed, str)
+            or len(claimed) != 64
+        ):
             return False
-        expected = _sha256(bytes.fromhex(previous) + _canonical(event))
+        try:
+            expected = _sha256(bytes.fromhex(previous) + _canonical(event))
+        except (ValueError, TypeError):
+            return False
         if claimed != expected:
             return False
         previous = claimed

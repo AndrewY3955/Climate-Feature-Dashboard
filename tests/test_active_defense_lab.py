@@ -12,7 +12,7 @@ def test_live_attacker_process_is_blocked_and_credential_revoked(tmp_path):
     result = run_active_defense_lab(evidence_dir=tmp_path)
 
     assert result["status"] == "PASS"
-    assert result["outcome"] == "PREVENTED_AND_CREDENTIAL_REVOKED"
+    assert result["outcome"] == "PREVENTED_AND_DETECTED_ROLLED_BACK"
     assert result["evidence_verifiable"] is True
     evidence = result["evidence"]
     assert evidence["attacker_process"]["executed"] is True
@@ -23,10 +23,18 @@ def test_live_attacker_process_is_blocked_and_credential_revoked(tmp_path):
     assert evidence["attacker_process"]["audit_pid_matches_os_pid"] is True
     assert evidence["attacker_process"]["transport"] == "HTTP over loopback TCP"
     requests = evidence["attacker_process"]["requests"]
-    assert [item["http_status"] for item in requests] == [200, 403, 401]
+    assert [item["http_status"] for item in requests] == [200, 403, 401, 200, 409, 401]
+    assert requests[4]["response"]["decision"] == "DETECT_QUARANTINE_ROLLBACK_REVOKE"
     assert requests[1]["response"]["decision"] == "DENY_AND_REVOKE"
     assert evidence["defense"]["prevented_before_mutation"] is True
     assert evidence["defense"]["credential_revoked"] is True
+    assert evidence["defense"]["unapproved_write_detected"] is True
+    assert evidence["defense"]["working_copy_rolled_back"] is True
+    quarantine = evidence["target_state"]["quarantine_evidence"]
+    assert len(quarantine) == 1
+    assert quarantine[0]["changed_record"]["value"] == 777777.0
+    assert quarantine[0]["rollback_verified"] is True
+    assert quarantine[0]["modified_sha256"] != quarantine[0]["restored_sha256"]
     assert evidence["target_state"]["unchanged"] is True
     assert evidence["target_state"]["before_sha256"] == evidence["target_state"]["after_sha256"]
     assert evidence["audit_chain_verified"] is True

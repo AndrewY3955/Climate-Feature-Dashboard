@@ -26,12 +26,12 @@ The demo runs through the local-only `POST /api/security-demo/run` endpoint. Git
 | Scenario | ATT&CK reference | Demonstration |
 |---|---|---|
 | Compromised contributor identity | T1078 – Valid Accounts | Tabletop exercise only. The local prototype has no authentication or account-audit service, so it cannot technically detect account compromise. |
-| Altered environmental value | T1565.001 – Stored Data Manipulation | Increase an energy value in a temporary copy; detect the changed digest. |
-| Deleted environmental observations | T1565.001 – Stored Data Manipulation | Remove water rows in a temporary copy; preserve the removed record IDs in the exercise result. |
-| Removed source attribution | T1565.001 – Stored Data Manipulation | Blank a source label in a temporary copy; detect the artifact change. |
-| Changed unit/scope metadata | T1565.001 – Stored Data Manipulation | Change a unit in a temporary copy; compare against the trusted reference and metric-unit rules. |
-| Altered transfer payload | T1565.002 – Transmitted Data Manipulation | Change bytes in a simulated payload and compare with the sender-side digest. No network interception is performed. |
-| Misleading visualization filter | T1565.001 – Stored Data Manipulation (scenario mapping) | Change a synthetic chart configuration to hide water records. This is not an edit to the deployed dashboard configuration. |
+| Altered environmental value | T1565.001 – Stored Data Manipulation | A child process increases an energy value in a disposable CSV file; detect the changed digest, quarantine the altered file, and restore the trusted baseline. |
+| Deleted environmental observations | T1565.001 – Stored Data Manipulation | A child process deletes water rows from a disposable CSV file; detect the changed digest, quarantine the altered file, and restore the trusted baseline. |
+| Removed source attribution | T1565.001 – Stored Data Manipulation | A child process blanks a source label in a disposable CSV file; detect the changed digest, quarantine the altered file, and restore the trusted baseline. |
+| Changed unit/scope metadata | T1565.001 – Stored Data Manipulation | A child process changes a unit in a disposable CSV file; detect the changed digest, quarantine the altered file, and restore the trusted baseline. |
+| Altered transfer payload | T1565.002 – Transmitted Data Manipulation | A child process alters a local transfer-fixture file; compare its digest with the trusted sender-side baseline. No network interception is performed. |
+| Misleading visualization filter | T1565.001 – Stored Data Manipulation (scenario mapping) | A child process changes include_water in a disposable dashboard-config.json file. This is not an edit to the deployed dashboard configuration. |
 
 These are the three ATT&CK techniques currently mapped in the project, with multiple concrete variants for stored-data manipulation. This is not coverage of every technique in the MITRE ATT&CK framework.
 
@@ -39,16 +39,16 @@ These are the three ATT&CK techniques currently mapped in the project, with mult
 
 Each technical scenario executes the six documented phases:
 
-1. **Preparation:** capture the trusted digest and record inventory.
+1. **Preparation:** create the disposable target, capture the trusted digest, and record the attacker process result.
 2. **Detection and analysis:** identify changed bytes or record details.
-3. **Containment:** copy the altered artifact into a temporary quarantine.
+3. **Containment:** copy the altered artifact into a quarantine evidence file inside the temporary lab directory.
 4. **Eradication:** remove the altered working copy after preserving evidence.
 5. **Recovery:** restore from a separate trusted baseline and verify the recovered digest; data scenarios also re-run schema/source validation.
 6. **Lessons learned:** show the relevant defensive control and residual limitation.
 
 The Valid Accounts scenario runs all six phases as a tabletop exercise. It is explicitly marked **TABLETOP ONLY**, not a successful technical detection.
 
-All technical scenarios use temporary directories and are removed after each exercise. The trusted dataset, manifest, source files, generated adversarial dataset, and repository files are not modified by the demo.
+All technical scenarios use temporary directories. The fixed attacker child process receives only the scenario identifier and one disposable target path, runs without a shell, and performs no network operations. This is process-level scope restriction, not an OS sandbox. Quarantine evidence is written to a temporary file and removed with the directory after the exercise. The trusted dataset, manifest, source files, generated adversarial dataset, and repository files are not modified by the demo.
 
 ## Comparability audit
 

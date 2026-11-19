@@ -185,7 +185,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         route = urlsplit(self.path).path
-        if route != "/api/security-demo/run":
+        if route not in {"/api/security-demo/run", "/api/active-defense-lab/run"}:
             self._send(404, "text/plain; charset=utf-8", b"Not found")
             return
         if not self._is_local_request() or not self.headers.get("Origin"):
@@ -207,9 +207,14 @@ class DashboardHandler(BaseHTTPRequestHandler):
             if request_body != {}:
                 self._send(400, "text/plain; charset=utf-8", b"Unexpected request fields")
                 return
-            from climate_dashboard.security_demo import run_security_demo
+            if route == "/api/security-demo/run":
+                from climate_dashboard.security_demo import run_security_demo
 
-            result = run_security_demo()
+                result = run_security_demo()
+            else:
+                from climate_dashboard.active_defense_lab import run_active_defense_lab
+
+                result = run_active_defense_lab()
             payload = json.dumps(result).encode("utf-8")
             self._send(200 if result["status"] == "PASS" else 503, "application/json; charset=utf-8", payload)
         except (json.JSONDecodeError, UnicodeDecodeError):

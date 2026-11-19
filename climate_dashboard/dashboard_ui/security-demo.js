@@ -192,3 +192,84 @@ runButton.addEventListener("click", async () => {
     runButton.disabled = false;
   }
 });
+
+const activeLabButton = document.querySelector("#run-active-lab");
+const activeLabStatus = document.querySelector("#active-lab-status");
+const activeLabResults = document.querySelector("#active-lab-results");
+const activeLabSummary = document.querySelector("#active-lab-summary");
+const activeLabEvidence = document.querySelector("#active-lab-evidence");
+const activeLabEvidenceStatus = document.querySelector("#active-lab-evidence-status");
+const downloadActiveEvidence = document.querySelector("#download-active-evidence");
+let activeEvidenceBundle = null;
+
+if (!isLocalDemo || document.documentElement.dataset.demoMode === "read-only") {
+  activeLabButton.disabled = true;
+  activeLabStatus.textContent = "This GitHub Pages copy is read-only. Start the local dashboard with .\\\\run.ps1 (Windows) or sh ./run.sh, then run the live exercise on 127.0.0.1.";
+}
+
+function addActiveSummary(label, value) {
+  const card = document.createElement("article");
+  card.className = "summary-card";
+  const heading = document.createElement("span");
+  heading.className = "summary-label";
+  heading.textContent = label;
+  const result = document.createElement("strong");
+  result.textContent = String(value);
+  card.append(heading, result);
+  activeLabSummary.append(card);
+}
+
+activeLabButton.addEventListener("click", async () => {
+  activeLabButton.disabled = true;
+  activeLabResults.hidden = true;
+  activeLabStatus.textContent = "Starting isolated target service and attacker process…";
+  downloadActiveEvidence.disabled = true;
+  activeEvidenceBundle = null;
+  try {
+    const response = await fetch("/api/active-defense-lab/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+      cache: "no-store",
+    });
+    const payload = await response.json();
+    if (!response.ok && !payload.evidence) {
+      throw new Error(payload.error || "Active-defense lab failed with HTTP " + response.status);
+    }
+    activeLabResults.hidden = false;
+    activeLabSummary.replaceChildren();
+    addActiveSummary("Overall result", payload.status);
+    addActiveSummary("Attack outcome", payload.outcome);
+    addActiveSummary("Attacker process", payload.evidence?.attacker_process?.executed ? "Executed" : "Not executed");
+    addActiveSummary("HTTP attack sequence", (payload.evidence?.attacker_process?.requests || []).map(item => item.http_status).join(" → "));
+    addActiveSummary("Credential revoked", payload.evidence?.defense?.credential_revoked ? "Yes" : "No");
+    addActiveSummary("Working-copy rollback", payload.evidence?.defense?.working_copy_rolled_back ? "Verified" : "Not verified");
+    addActiveSummary("Protected data unchanged", payload.evidence?.target_state?.unchanged ? "Verified" : "Not verified");
+    activeEvidenceBundle = payload.evidence || null;
+    activeLabEvidence.textContent = JSON.stringify(payload.evidence || payload, null, 2);
+    activeLabEvidenceStatus.textContent = payload.evidence_verifiable
+      ? "Evidence checks passed: report SHA-256 and the audit-event hash chain verify. Report SHA-256: " + payload.evidence.report_sha256 + ". File SHA-256: " + payload.evidence_file_sha256 + ". Saved locally at: " + payload.evidence_path
+      : "Evidence verification failed or was not available. Do not treat this run as a successful defense.";
+    downloadActiveEvidence.disabled = !activeEvidenceBundle || !payload.evidence_verifiable;
+    activeLabStatus.textContent = payload.status === "PASS"
+      ? "Complete: the protected write was denied; the working-copy change was detected, quarantined, rolled back, and credentials were revoked."
+      : "The exercise did not meet every success condition. Inspect the evidence; do not claim a successful defense.";
+  } catch (error) {
+    activeLabStatus.textContent = "Unable to complete the active-defense exercise: " + error.message;
+  } finally {
+    activeLabButton.disabled = false;
+  }
+});
+
+downloadActiveEvidence.addEventListener("click", () => {
+  if (!activeEvidenceBundle) return;
+  const blob = new Blob([JSON.stringify(activeEvidenceBundle, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = activeEvidenceBundle.run_id + ".json";
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+});

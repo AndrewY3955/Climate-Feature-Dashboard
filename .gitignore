@@ -38,3 +38,7 @@ Desktop.ini
 # Temporary editor/Office files
 ~$*.xlsx
 ~$*.xlsm
+
+# Runtime-generated active-defense evidence reports (download or archive deliberately).
+evidence/active-defense-lab/*.json
+evidence/active-defense-lab/*.json.tmp

@@ -66,3 +66,17 @@ footer p { margin: 0; }
   button, .top-nav { display: none; }
   .scenario-card, .result-section { break-inside: avoid; }
 }
+
+.evidence-json {
+  max-height: 34rem;
+  overflow: auto;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: .5rem;
+  background: #102330;
+  color: #e6f0f4;
+  font: .78rem/1.5 Consolas, "Courier New", monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+#active-lab-evidence-status { overflow-wrap: anywhere; }

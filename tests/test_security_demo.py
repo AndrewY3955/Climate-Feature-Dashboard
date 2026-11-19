@@ -70,3 +70,15 @@ def test_full_security_demo_passes_without_modifying_trusted_data():
     )
     assert all(len(item["phases"]) == 6 for item in result["scenarios"])
     assert any(item["status"] == "TABLETOP ONLY" for item in result["scenarios"])
+
+    for item in result["scenarios"]:
+        evidence = item["attack_execution"]
+        if item["status"] == "TABLETOP ONLY":
+            assert evidence["executed"] is False
+            continue
+        assert evidence["executed"] is True, item["scenario_id"]
+        assert evidence["exit_code"] == 0, item["scenario_id"]
+        assert evidence["before_sha256"] != evidence["after_sha256"], item["scenario_id"]
+        assert evidence["quarantine_sha256"] == evidence["after_sha256"], item["scenario_id"]
+        assert evidence["recovery_sha256"] == evidence["before_sha256"], item["scenario_id"]
+        assert evidence["network_access"] == "not used"

@@ -1,5 +1,15 @@
 # Final presentation and live demonstration outline
 
+## Executable attack-lab behavior
+
+The current Security Demo Center runs each technical attack as a separate Python child process against a disposable file in a newly created temporary directory. The child process receives only the fixed scenario identifier and runs with the temporary lab directory as its working directory. Its script opens one fixed lab filename; it does not receive a production-data path, credentials, or a network target. This is an isolated local attack exercise, not an exploit against the deployed dashboard or an OS-level sandbox.
+
+For each technical scenario, the defender records the known-good lab fixture's SHA-256, runs the attacker process, reads the changed target, compares the new digest with the known-good lab baseline, copies the altered bytes into a quarantine-evidence file, deletes the altered working target, restores the known-good lab baseline, and verifies the recovered digest. CSV scenarios rerun structural validation of the synthetic lab fixture after recovery; the reviewed dataset's schema/source validation runs separately at the start of the demonstration. The UI reports the child-process exit code and output, before/after/quarantine/recovery hashes, detection result, and incident-response phases.
+
+**How to present this accurately:** show the attacker process output and hash transition first; then show the defender's detected digest mismatch, quarantined evidence, eradication, and recovery hash matching the original. The target is a synthetic disposable lab fixture, not the reviewed dashboard dataset. The payload scenario modifies a local transfer fixture, not live network traffic. The visualization scenario changes a lab configuration file, not the deployed dashboard's active configuration. Valid Accounts (T1078) remains tabletop-only because the application has no authentication service or account-audit telemetry.
+
+A PASS means the isolated attack process executed, the modified target was detected by the SHA-256 comparison, quarantine and eradication completed, known-good lab bytes were restored, and applicable validation passed. It does not mean the production application resisted an external attacker.
+
 This outline maps the assignment's presentation requirements to a concise, reproducible live demonstration. It is a speaker outline, not a claim that a slide deck or recording already exists.
 
 ## Security demonstration results: findings and interpretation
@@ -31,9 +41,9 @@ Use this section when presenting the one-click Security Demo Center output. Thes
 ### How to explain the seven scenarios
 
 - **T1078 — Compromised contributor account (TABLETOP ONLY):** the scenario assumes an identity is compromised. The project has no login, MFA, authorization, or account-audit service, so it does not technically detect account compromise. The six response phases are a classroom walkthrough.
-- **T1565.001 — Stored Data Manipulation:** four exercises alter a copied value, omit water records, remove source attribution, or change a unit. A fifth changes a synthetic visualization-filter configuration. They demonstrate why record-level baselines, provenance, unit/scope validation, and filter review matter.
+- **T1565.001 — Stored Data Manipulation:** four exercises alter a synthetic lab record, omit water records, remove source attribution, or change a unit. A fifth changes a synthetic visualization-filter configuration. They demonstrate why record-level baselines, provenance, unit/scope validation, and filter review matter.
 - **T1565.002 — Transmitted Data Manipulation:** the transfer exercise changes bytes in a simulated payload and checks it against the sender-side digest. It is not a live network interception or transport-security test.
-- **Recovery:** for the technical scenarios, altered working data is held in an in-memory quarantine buffer, discarded, and replaced with trusted bytes. A matching restored digest and applicable schema validation show that this simulated recovery path worked; this is not a production backup/restore test.
+- **Recovery:** for the technical scenarios, altered working data is copied to a quarantine evidence file in the temporary lab directory, the altered working file is deleted, and known-good lab bytes are restored. The temporary directory, including quarantine evidence, is removed when the scenario ends. A matching restored digest and lab structural validation show that this simulated recovery path worked; this is not a production backup/restore test.
 
 ### Comparability finding: 0 direct, 0 conditional, 21 not comparable
 
@@ -45,7 +55,7 @@ Do not say that the 21 results mean the audit failed, that the observations are 
 
 ### Simulation boundary and residual controls
 
-All scenario changes use temporary copies or synthetic in-memory settings; the trusted dataset is not modified. These are defensive classroom exercises, not live attacks, penetration tests, a production SOC, or a live threat feed. ATT&CK IDs are static technique references, not evidence of attribution or live detection.
+All technical scenario changes occur in disposable files inside temporary directories; the reviewed dataset and project files are not modified. Attack fixtures are synthetic and structurally representative, not copies of the reviewed dataset. The Valid Accounts exercise is tabletop-only. These are executable attack exercises against isolated synthetic lab fixtures, not attacks against the deployed dashboard or external systems, penetration tests, a production SOC, or a live threat feed. ATT&CK IDs are static technique references, not evidence of attribution or live detection.
 
 The prototype does not deploy MFA, role-based access enforcement, central account/audit logging, independent manifest custody, production key management, immutable backups, or automated production recovery. AES-GCM is a standalone file demonstration. SHA-256 detects a difference only against a separately trusted reference.
 

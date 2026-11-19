@@ -82,6 +82,30 @@ function renderScenarios(items) {
     outcome.className = "scenario-result";
     outcome.textContent = "RESULT: " + (scenario.result || scenario.result_basis || scenario.status);
     card.append(mapping, description, vector, changed, detail, defense, outcome);
+    if (scenario.attack_execution) {
+      const execution = document.createElement("div");
+      execution.className = "scenario-evidence";
+      const executionTitle = document.createElement("strong");
+      executionTitle.textContent = "ATTACK PROCESS EVIDENCE";
+      execution.append(executionTitle);
+      const executionDetail = document.createElement("p");
+      const attack = scenario.attack_execution;
+      executionDetail.textContent = attack.executed
+        ? "Executed in isolated child process; exit code " + attack.exit_code +
+          "; target " + attack.target + "; before SHA-256 " + attack.before_sha256 +
+          "; after SHA-256 " + attack.after_sha256 +
+          "; quarantine SHA-256 " + attack.quarantine_sha256 +
+          "; recovered SHA-256 " + attack.recovery_sha256 +
+          "; network access: " + attack.network_access + "."
+        : "No attack process executed: " + (attack.reason || attack.error || attack.stderr || "tabletop-only scenario.");
+      execution.append(executionDetail);
+      if (attack.stdout) {
+        const output = document.createElement("p");
+        output.textContent = "ATTACKER OUTPUT: " + attack.stdout;
+        execution.append(output);
+      }
+      card.append(execution);
+    }
     if (scenario.phases?.length) {
       const phaseTitle = document.createElement("h5");
       phaseTitle.textContent = "Incident-response phases";

@@ -1,7 +1,8 @@
 """Run safe, repeatable security and incident-response demonstrations.
 
-Every attack simulation operates on in-memory copies or synthetic fixtures.
-No external system, real credential, production dataset, or network attack is used.
+Each technical attack runs in a short-lived, isolated child process against a
+ disposable lab file. The lab uses temporary copies/synthetic fixtures only;
+no external system, real credential, production dataset, or network target is used.
 """
 
 from __future__ import annotations
@@ -10,7 +11,11 @@ import csv
 import hashlib
 import io
 import json
+import os
 import secrets
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -30,12 +35,20 @@ REVIEWED_DIR = ROOT / "data" / "processed" / "reviewed"
 TRUSTED_FILE = REVIEWED_DIR / "trusted_data.csv"
 MANIFEST_FILE = REVIEWED_DIR / "trusted_manifest.json"
 
+LAB_DATA_FIXTURE = (
+    "record_id,metric,value,unit,source_name\n"
+    "OBS001,Total energy consumption,27456000.0,MWh,Lab source\n"
+    "OBS002,Water recycled from recovery systems,284600000.0,m3,Lab source\n"
+    "OBS005,Scope 1 and Scope 2 greenhouse-gas emissions,14546000.0,t CO2e,Lab source\n"
+).encode("utf-8")
+LAB_PAYLOAD_FIXTURE = b"payload=27456000.0\n"
+
 RESPONSE_PHASES = [
-    ("Preparation", "Preserve the trusted baseline, source evidence, expected hashes, and response contacts."),
+    ("Preparation", "Preserve the known-good lab baseline, source evidence, expected hashes, and response contacts."),
     ("Detection and analysis", "Identify the changed bytes or records, affected fields, and likely technique mapping."),
     ("Containment", "Quarantine the simulated changed copy; never overwrite the trusted source."),
     ("Eradication", "Remove the simulated altered working copy after preserving its evidence."),
-    ("Recovery", "Restore a fresh copy from the trusted baseline and verify its digest and data validation."),
+    ("Recovery", "Restore a fresh copy from the known-good lab baseline and verify its digest and data validation."),
     ("Lessons learned", "Record the control gap, evidence, residual risk, and follow-up action."),
 ]
 
@@ -59,52 +72,52 @@ SCENARIO_CATALOG = [
         "technique_id": "T1565.001",
         "technique_name": "Stored Data Manipulation",
         "title": "Environmental value altered",
-        "description": "Increase a copied energy observation by 50 percent.",
+        "description": "Increase a synthetic lab energy record by 50 percent.",
         "attack_vector": "Stored record value tampering (MITRE ATT&CK T1565.001).",
-        "simulated_change": "Increase the value field of one copied energy observation by 50%; the trusted CSV remains unchanged.",
-        "defense_used": "Compare the altered copy's SHA-256 with the trusted baseline; preserve the changed bytes in an in-memory quarantine; restore trusted bytes and validate the restored dataset. Record-level review is a recommended follow-up, not a separate automated detector in this scenario.",
-        "result_basis": "PASS when the digest mismatch detects the altered copy and the trusted-byte recovery digest and schema validation pass.",
+        "simulated_change": "Increase the value field of one synthetic lab energy record by 50%; the reviewed CSV remains unchanged.",
+        "defense_used": "Compare the altered copy's SHA-256 with the known-good lab baseline; preserve the changed bytes in a quarantine evidence file in the temporary lab directory; restore known-good lab bytes and validate the restored lab fixture structure. Record-level review is a recommended follow-up, not a separate automated detector in this scenario.",
+        "result_basis": "PASS when the digest mismatch detects the altered copy and the lab-baseline recovery digest and lab structural validation pass.",
         "mode": "data",
-        "control": "Compare the changed file with the protected trusted digest and record-level baseline.",
+        "control": "Compare the changed file with the known-good lab digest and record inventory.",
     },
     {
         "scenario_id": "stored-omission",
         "technique_id": "T1565.001",
         "technique_name": "Stored Data Manipulation",
         "title": "Environmental records deleted",
-        "description": "Remove water observations from a copied dataset; removed is not zero.",
+        "description": "Delete water observations from the synthetic lab fixture; removed is not zero.",
         "attack_vector": "Stored record deletion / omission (MITRE ATT&CK T1565.001).",
-        "simulated_change": "Remove copied water-observation rows and retain their record IDs in the scenario evidence; trusted records remain intact.",
-        "defense_used": "The SHA-256 baseline comparison detects the changed file; quarantine the altered bytes and restore trusted bytes. Record-ID, row-count, and feature-coverage review are recommended follow-up checks, not separate automated detectors in this scenario.",
-        "result_basis": "PASS when the altered-copy digest differs and restored trusted bytes match the baseline and pass schema validation.",
+        "simulated_change": "Delete water-observation rows from the synthetic lab fixture and retain their record IDs in the scenario evidence; reviewed records remain intact.",
+        "defense_used": "The SHA-256 baseline comparison detects the changed file; quarantine the altered bytes and restore known-good lab bytes. Record-ID, row-count, and feature-coverage review are recommended follow-up checks, not separate automated detectors in this scenario.",
+        "result_basis": "PASS when the altered-copy digest differs and restored lab bytes match the baseline and pass structural validation.",
         "mode": "data",
-        "control": "Compare record IDs, row counts, feature coverage, and the trusted digest.",
+        "control": "Compare record IDs, row counts, feature coverage, and the lab-baseline digest.",
     },
     {
         "scenario_id": "stored-provenance",
         "technique_id": "T1565.001",
         "technique_name": "Stored Data Manipulation",
         "title": "Source attribution removed",
-        "description": "Blank a source label while retaining the original trusted record.",
+        "description": "Blank a source label in a synthetic lab record; the reviewed record is not modified.",
         "attack_vector": "Stored provenance / source-attribution tampering (MITRE ATT&CK T1565.001).",
-        "simulated_change": "Blank the source_name field on one copied observation; the original trusted record is preserved.",
-        "defense_used": "The SHA-256 baseline comparison detects the changed file; quarantine the altered bytes and restore trusted bytes. Required-source and provenance validation are recommended follow-up controls, not separately demonstrated detection in this scenario.",
-        "result_basis": "PASS when the altered copy is detected and the restored trusted dataset passes digest and schema checks.",
+        "simulated_change": "Blank the source_name field on one synthetic lab record; the reviewed record is not modified.",
+        "defense_used": "The SHA-256 baseline comparison detects the changed file; quarantine the altered bytes and restore known-good lab bytes. Required-source and provenance validation are recommended follow-up controls, not separately demonstrated detection in this scenario.",
+        "result_basis": "PASS when the altered copy is detected and the restored synthetic lab fixture passes digest and structural checks.",
         "mode": "data",
-        "control": "Validate required provenance and compare the record with the trusted source copy.",
+        "control": "Validate required provenance and compare the record with the known-good lab fixture.",
     },
     {
         "scenario_id": "stored-scope",
         "technique_id": "T1565.001",
         "technique_name": "Stored Data Manipulation",
         "title": "Unit or reporting boundary changed",
-        "description": "Change a unit or geography/boundary label without changing the source report.",
+        "description": "Change a unit or geography/boundary label without changing the reviewed source report.",
         "attack_vector": "Stored unit / reporting-scope tampering (MITRE ATT&CK T1565.001).",
-        "simulated_change": "Change the unit field on one copied observation (for example, MWh to kg) without changing the source report.",
-        "defense_used": "The SHA-256 baseline comparison detects the changed file; quarantine the altered bytes and restore trusted bytes. Metric-unit and reporting-scope validation are recommended follow-up controls, not separately demonstrated detection in this scenario.",
-        "result_basis": "PASS when the changed copy is detected and restored trusted bytes pass digest and schema checks.",
+        "simulated_change": "Change the unit field on one synthetic lab record (for example, MWh to kg) without changing the reviewed source report.",
+        "defense_used": "The SHA-256 baseline comparison detects the changed file; quarantine the altered bytes and restore known-good lab bytes. Metric-unit and reporting-scope validation are recommended follow-up controls, not separately demonstrated detection in this scenario.",
+        "result_basis": "PASS when the changed copy is detected and restored lab bytes pass digest and structural checks.",
         "mode": "data",
-        "control": "Validate metric-unit pairs and compare year, geography, facility scope, and lifecycle boundary.",
+        "control": "Validate metric-unit pairs and compare reporting dimensions as a recommended follow-up control.",
     },
     {
         "scenario_id": "transmitted-payload",
@@ -114,8 +127,8 @@ SCENARIO_CATALOG = [
         "description": "Change bytes in a simulated transfer payload and compare it with the sender-side digest.",
         "attack_vector": "In-transit payload modification (MITRE ATT&CK T1565.002); simulated bytes only, not a live network interception.",
         "simulated_change": "Alter one value sequence in a synthetic transfer payload; no network traffic or deployed transport path is modified.",
-        "defense_used": "Compare the received payload digest with the sender-side trusted digest; preserve the altered payload in memory and recover the original trusted bytes.",
-        "result_basis": "PASS when the payload digest mismatch is detected and the original trusted-byte digest is verified after recovery.",
+        "defense_used": "Compare the received payload digest with the sender-side lab baseline digest; preserve the altered payload in a quarantine evidence file in the temporary lab directory and recover the original known-good lab bytes.",
+        "result_basis": "PASS when the payload digest mismatch is detected and the original lab-fixture digest is verified after recovery.",
         "mode": "payload",
         "control": "Authenticate the transfer channel and verify a digest or signature from an independently trusted sender.",
     },
@@ -126,8 +139,8 @@ SCENARIO_CATALOG = [
         "title": "Visualization hides an unfavorable category",
         "description": "Change a synthetic chart-filter configuration so water records are excluded from the view.",
         "attack_vector": "Report / visualization configuration manipulation (mapped to MITRE ATT&CK T1565.001 as a stored-data integrity scenario; not a dedicated visualization technique claim).",
-        "simulated_change": "Set include_water from true to false in a synthetic in-memory chart configuration; deployed dashboard filters are not changed.",
-        "defense_used": "Compare the synthetic configuration bytes with the original configuration digest, preserve the altered configuration in memory, and restore the original synthetic configuration. This does not test the deployed dashboard filters.",
+        "simulated_change": "Set include_water from true to false in a synthetic dashboard-configuration fixture; deployed dashboard filters are not changed.",
+        "defense_used": "Compare the synthetic configuration bytes with the original configuration digest, preserve the altered configuration in a quarantine evidence file and restore the original synthetic configuration. This does not test the deployed dashboard filters.",
         "result_basis": "PASS when the synthetic configuration change is identified and the original configuration is restored; this does not test deployed dashboard visuals.",
         "mode": "visual",
         "control": "Review report filters, visual interactions, axis ranges, labels, and the underlying expected feature inventory.",
@@ -262,7 +275,8 @@ def _mutate_scenario(scenario_id: str, original: bytes) -> tuple[bytes, str]:
     raise ValueError(f"Unknown data scenario: {scenario_id}")
 
 
-def _response_exercise(scenario: dict[str, Any], trusted_bytes: bytes) -> dict[str, Any]:
+def _response_exercise(scenario: dict[str, Any]) -> dict[str, Any]:
+    """Execute an attacker child process against a disposable lab file, then defend it."""
     if scenario["mode"] == "tabletop":
         return {
             "status": "TABLETOP ONLY",
@@ -274,59 +288,222 @@ def _response_exercise(scenario: dict[str, Any], trusted_bytes: bytes) -> dict[s
                 for phase, action in RESPONSE_PHASES
             ],
             "recovery_verified": None,
+            "attack_execution": {
+                "mode": "tabletop",
+                "executed": False,
+                "reason": "No authentication service or account-audit telemetry exists in this application.",
+            },
         }
 
-    mutated_bytes, detail = _mutate_scenario(scenario["scenario_id"], trusted_bytes)
-    recovery_baseline = trusted_bytes
-    if scenario["mode"] == "visual":
-        recovery_baseline = json.dumps({
+    target_name = "lab-target.data"
+    if scenario["mode"] == "data":
+        baseline = LAB_DATA_FIXTURE
+    elif scenario["mode"] == "payload":
+        baseline = LAB_PAYLOAD_FIXTURE
+    elif scenario["mode"] == "visual":
+        baseline = json.dumps({
             "view": "environmental-observations",
             "filters": {"year": "all", "metric": "all", "include_water": True},
             "axis": "reported value with unit",
         }, sort_keys=True).encode("utf-8")
-    expected_hash = _sha256(recovery_baseline)
-    actual_hash = _sha256(mutated_bytes)
-    detected = expected_hash != actual_hash
+        target_name = "lab-target.data"
 
-    # Keep the entire response exercise in memory. The simulated evidence,
-    # quarantine, eradication, and recovery steps do not need plaintext files
-    # on disk; this also prevents sensitive source material from being written
-    # to temporary storage.
-    working_copy = bytes(mutated_bytes)
-    quarantine_evidence = bytes(working_copy)
-    quarantined = quarantine_evidence == mutated_bytes
-    working_copy = None
-    eradicated = working_copy is None
+    # This child process is the attacker. It runs in a temporary
+    # directory, opens one fixed lab filename, has no shell or network code, and has no production-data path.
+    attacker_script = r'''
+import csv, io, json, pathlib, sys
+scenario, filename = sys.argv[1], pathlib.Path("lab-target.data")
+original = filename.read_bytes()
+if scenario == "transmitted-payload":
+    changed = original.replace(b"27456000", b"37456000", 1)
+    if changed == original:
+        changed = original + b" "
+    filename.write_bytes(changed)
+    print("Modified one payload byte sequence in the isolated transfer fixture.")
+elif scenario == "visualization-filter":
+    config = json.loads(original.decode("utf-8"))
+    before = config["filters"]["include_water"]
+    config["filters"]["include_water"] = False
+    filename.write_text(json.dumps(config, sort_keys=True), encoding="utf-8")
+    print(f"Changed include_water from {before} to false in the lab configuration.")
+else:
+    stream = io.StringIO(original.decode("utf-8-sig"), newline="")
+    reader = csv.DictReader(stream)
+    fields = reader.fieldnames
+    rows = list(reader)
+    if not fields or not rows:
+        raise SystemExit("Lab CSV is empty or has no header.")
+    if scenario == "stored-value":
+        target = next((r for r in rows if "energy" in r.get("metric", "").lower()), None)
+        if target is None:
+            raise SystemExit("No energy observation available.")
+        before = float(target["value"])
+        target["value"] = str(before * 1.5)
+        detail = f'{target["record_id"]}: value {before:g} -> {float(target["value"]):g}'
+    elif scenario == "stored-omission":
+        removed = [r for r in rows if "water" in r.get("metric", "").lower()]
+        rows = [r for r in rows if "water" not in r.get("metric", "").lower()]
+        if not removed:
+            raise SystemExit("No water observations available.")
+        detail = "Deleted record IDs: " + ", ".join(r.get("record_id", "?") for r in removed)
+    elif scenario == "stored-provenance":
+        target = next((r for r in rows if r.get("record_id") == "OBS005"), rows[0])
+        before = target.get("source_name", "")
+        target["source_name"] = ""
+        detail = f'{target.get("record_id")}: source_name "{before}" -> blank'
+    elif scenario == "stored-scope":
+        target = next((r for r in rows if r.get("record_id") == "OBS001"), rows[0])
+        before = target.get("unit", "")
+        target["unit"] = "kg"
+        detail = f'{target.get("record_id")}: unit "{before}" -> "kg"'
+    else:
+        raise SystemExit("Unknown attack scenario.")
+    output = io.StringIO(newline="")
+    writer = csv.DictWriter(output, fieldnames=fields, extrasaction="ignore", lineterminator="\n")
+    writer.writeheader()
+    writer.writerows(rows)
+    filename.write_bytes(output.getvalue().encode("utf-8"))
+    print(detail)
+'''
+    with tempfile.TemporaryDirectory(prefix="climate-attack-lab-") as temporary:
+        lab_dir = Path(temporary).resolve()
+        target = lab_dir / target_name
+        quarantine = lab_dir / "quarantine.evidence"
+        target.write_bytes(baseline)
+        expected_hash = _sha256(baseline)
 
-    restored_bytes = bytes(recovery_baseline)
-    restored_hash = _sha256(restored_bytes)
-    recovery_verified = restored_hash == expected_hash
+        # Do not pass application credentials, API tokens, or unrelated
+        # environment variables into the attacker process. Windows receives
+        # only the OS variables needed to start Python reliably.
+        child_env = {
+            key: os.environ[key]
+            for key in ("SYSTEMROOT", "WINDIR", "TEMP", "TMP")
+            if key in os.environ
+        }
+        try:
+            process = subprocess.run(
+                [sys.executable, "-I", "-c", attacker_script, scenario["scenario_id"]],
+                cwd=lab_dir,
+                stdin=subprocess.DEVNULL,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=5,
+                check=False,
+                env=child_env,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            return {
+                "status": "FAIL",
+                "detected": False,
+                "detail": f"Attacker process could not complete: {exc}",
+                "result": "FAIL — attack execution did not complete.",
+                "phases": [
+                    {"phase": "Preparation", "status": "COMPLETE", "action": "Created disposable target and retained known-good lab baseline."},
+                    {"phase": "Detection and analysis", "status": "FAILED", "action": "Attacker process did not complete: " + str(exc)},
+                    {"phase": "Containment", "status": "NOT RUN", "action": "No altered artifact was confirmed for quarantine."},
+                    {"phase": "Eradication", "status": "NOT RUN", "action": "No altered working target was confirmed for removal."},
+                    {"phase": "Recovery", "status": "NOT RUN", "action": "Recovery was not claimed after failed attack execution."},
+                    {"phase": "Lessons learned", "status": "REVIEW REQUIRED", "action": scenario["control"]},
+                ],
+                "recovery_verified": False,
+                "attack_execution": {"mode": "isolated child process", "executed": False, "error": str(exc)},
+            }
 
-    validation_status = "NOT APPLICABLE"
-    if scenario["mode"] == "data":
-        frame = pd.read_csv(io.BytesIO(restored_bytes))
-        source_register = pd.read_csv(SOURCE_REGISTER_FILE)
-        validation_status = validate_dataframe(frame, source_register)["status"]
+        if process.returncode != 0 or not target.is_file():
+            error = (process.stderr or process.stdout or "Attacker process did not modify the lab target.").strip()
+            return {
+                "status": "FAIL",
+                "detected": False,
+                "detail": error,
+                "result": "FAIL — attack process failed; no defensive success is claimed.",
+                "phases": [
+                    {"phase": "Preparation", "status": "COMPLETE", "action": "Created disposable target and retained known-good lab baseline."},
+                    {"phase": "Detection and analysis", "status": "FAILED", "action": "Attacker process failed: " + error},
+                    {"phase": "Containment", "status": "NOT RUN", "action": "No successful attack artifact was confirmed for quarantine."},
+                    {"phase": "Eradication", "status": "NOT RUN", "action": "No altered working target was confirmed for removal."},
+                    {"phase": "Recovery", "status": "NOT RUN", "action": "Recovery was not claimed after failed attack execution."},
+                    {"phase": "Lessons learned", "status": "REVIEW REQUIRED", "action": scenario["control"]},
+                ],
+                "recovery_verified": False,
+                "attack_execution": {
+                    "mode": "isolated child process",
+                    "executed": False,
+                    "exit_code": process.returncode,
+                    "stdout": process.stdout.strip(),
+                    "stderr": process.stderr.strip(),
+                },
+            }
 
-    phases = [
-        {"phase": "Preparation", "status": "COMPLETE", "action": "Captured the trusted SHA-256 baseline and record inventory."},
-        {"phase": "Detection and analysis", "status": "DETECTED" if detected else "NOT DETECTED", "action": detail},
-        {"phase": "Containment", "status": "COMPLETE" if quarantined else "FAILED", "action": "Preserved the altered artifact in an isolated in-memory quarantine buffer."},
-        {"phase": "Eradication", "status": "COMPLETE" if eradicated else "FAILED", "action": "Removed the altered working copy after preserving quarantine evidence."},
-        {"phase": "Recovery", "status": "VERIFIED" if recovery_verified else "FAILED", "action": f"Restored trusted bytes; SHA-256 match={recovery_verified}; schema validation={validation_status}."},
-        {"phase": "Lessons learned", "status": "COMPLETE", "action": scenario["control"]},
-    ]
-    return {
-        "status": "PASS" if detected and quarantined and eradicated and recovery_verified and validation_status in ("PASS", "NOT APPLICABLE") else "FAIL",
-        "detected": detected,
-        "detail": detail,
-        "result": scenario["result_basis"] if detected and quarantined and eradicated and recovery_verified and validation_status in ("PASS", "NOT APPLICABLE") else "FAIL — one or more detection, quarantine, eradication, recovery, or validation checks did not pass.",
-        "expected_sha256": expected_hash,
-        "simulated_sha256": actual_hash,
-        "phases": phases,
-        "recovery_verified": recovery_verified,
-        "validation_status": validation_status,
-    }
+        attacked_bytes = target.read_bytes()
+        actual_hash = _sha256(attacked_bytes)
+        detected = actual_hash != expected_hash
+        detail = process.stdout.strip() or "Attacker process modified the isolated target."
+        quarantine.write_bytes(attacked_bytes)
+        quarantine_hash = _sha256(quarantine.read_bytes())
+        quarantined = quarantine_hash == actual_hash
+
+        # Eradicate the compromised working file, then recover from the
+        # known-good lab baseline retained in process memory.
+        target.unlink(missing_ok=True)
+        eradicated = not target.exists()
+        target.write_bytes(baseline)
+        restored_hash = _sha256(target.read_bytes())
+        recovery_verified = restored_hash == expected_hash
+
+        validation_status = "NOT APPLICABLE"
+        if scenario["mode"] == "data":
+            frame = pd.read_csv(target)
+            required_lab_columns = {"record_id", "metric", "value", "unit", "source_name"}
+            valid_lab_fixture = (
+                required_lab_columns.issubset(frame.columns)
+                and not frame.empty
+                and frame["record_id"].notna().all()
+            )
+            validation_status = "PASS" if valid_lab_fixture else "FAIL"
+
+        success = (
+            process.returncode == 0
+            and detected
+            and quarantined
+            and eradicated
+            and recovery_verified
+            and validation_status in ("PASS", "NOT APPLICABLE")
+        )
+        phases = [
+            {"phase": "Preparation", "status": "COMPLETE", "action": f"Created disposable target {target_name}; attacker child process exit code {process.returncode}; {detail} Lab-baseline SHA-256={expected_hash}."},
+            {"phase": "Detection and analysis", "status": "DETECTED" if detected else "NOT DETECTED", "action": f"Defender compared target SHA-256 {actual_hash} with lab-baseline SHA-256 {expected_hash}."},
+            {"phase": "Containment", "status": "COMPLETE" if quarantined else "FAILED", "action": f"Copied altered target to isolated quarantine evidence; evidence SHA-256={quarantine_hash}."},
+            {"phase": "Eradication", "status": "COMPLETE" if eradicated else "FAILED", "action": "Deleted the altered working target after preserving quarantine evidence."},
+            {"phase": "Recovery", "status": "VERIFIED" if recovery_verified else "FAILED", "action": f"Restored known-good lab baseline; digest match={recovery_verified}; lab structural validation={validation_status}."},
+            {"phase": "Lessons learned", "status": "COMPLETE", "action": scenario["control"]},
+        ]
+        return {
+            "status": "PASS" if success else "FAIL",
+            "detected": detected,
+            "detail": detail,
+            "result": scenario["result_basis"] if success else "FAIL — attack, detection, quarantine, eradication, recovery, or validation did not pass.",
+            "expected_sha256": expected_hash,
+            "simulated_sha256": actual_hash,
+            "phases": phases,
+            "recovery_verified": recovery_verified,
+            "validation_status": validation_status,
+            "attack_execution": {
+                "mode": "isolated child process",
+                "executed": process.returncode == 0,
+                "exit_code": process.returncode,
+                "target": target_name,
+                "before_sha256": expected_hash,
+                "after_sha256": actual_hash,
+                "quarantine_sha256": quarantine_hash,
+                "recovery_sha256": restored_hash,
+                "stdout": process.stdout.strip(),
+                "stderr": process.stderr.strip(),
+                "network_access": "not used",
+                "scope": "disposable temporary directory only",
+            },
+        }
 
 
 def run_security_demo() -> dict[str, Any]:
@@ -376,7 +553,7 @@ def run_security_demo() -> dict[str, Any]:
     comparisons = compare_all_records(records)
     scenarios = []
     for scenario in SCENARIO_CATALOG:
-        result = _response_exercise(scenario, trusted_bytes)
+        result = _response_exercise(scenario)
         scenarios.append({**scenario, **result})
 
     technical_scenarios = [item for item in scenarios if item["status"] != "TABLETOP ONLY"]
@@ -399,7 +576,7 @@ def run_security_demo() -> dict[str, Any]:
         "scenarios": scenarios,
         "comparability": comparisons,
         "security_boundary": [
-            "All mutations are performed on temporary copies or synthetic in-memory configuration; trusted project files are never modified.",
+            "Technical attacks modify disposable files inside temporary directories; quarantine evidence is also temporary. Trusted project files are never modified. The account scenario remains tabletop-only.",
             "MITRE ATT&CK is a static defensive mapping, not a live threat feed or evidence of a real intrusion.",
             "Valid Accounts is a tabletop exercise because the prototype has no login, MFA, authorization, or account-audit service.",
             "AES-256-GCM is a standalone file demonstration; it does not encrypt dashboard storage, GitHub Pages, or network traffic.",

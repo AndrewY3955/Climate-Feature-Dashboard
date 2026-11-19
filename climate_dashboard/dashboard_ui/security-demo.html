@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Run the project's safe security checks, ATT&CK scenario exercises, comparability review, and incident-response recovery demonstration.">
+  <meta name="description" content="Run reproducible security checks and a live isolated attacker-versus-defender exercise.">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>Security Demo Center · Climate-Feature Dashboard</title>
   <link rel="stylesheet" href="/security-demo.css">
@@ -14,7 +14,7 @@
   <header>
     <p class="eyebrow">Controlled classroom exercise · local only</p>
     <h1>Security Demo Center</h1>
-    <p>Run the project's integrity, validation, encryption, ATT&amp;CK scenario, comparability, and six-phase recovery demonstrations from one place.</p>
+    <p>Run project integrity checks and inspect a live attacker-versus-defender exercise with reproducible evidence.</p>
   </header>
   <main id="main">
     <nav class="top-nav" aria-label="Dashboard navigation">
@@ -32,6 +32,23 @@
       </div>
       <button id="run-all" type="button">Run all security tests and scenarios</button>
       <p id="run-status" role="status" aria-live="polite">Ready. Start the local dashboard first, then run the demonstration.</p>
+    </section>
+    <section class="run-panel" aria-labelledby="active-lab-heading">
+      <div>
+        <p class="eyebrow">Live adversary versus defender</p>
+        <h2 id="active-lab-heading">Run the active-defense lab</h2>
+        <p>Starts a real loopback HTTP target with disposable in-memory data, launches a separate attacker process, attempts a protected-record overwrite, enforces the access policy before mutation, revokes the violating lab credential, and records hash-chained audit events. This is a controlled behavior reproduction, not an exploit against an external system.</p>
+      </div>
+      <button id="run-active-lab" type="button">Run live attack and defense</button>
+      <p id="active-lab-status" role="status" aria-live="polite">Ready. The target and attacker are created only when you run this exercise.</p>
+    </section>
+    <section id="active-lab-results" hidden aria-live="polite" class="result-section">
+      <h2>Live attack-and-defense evidence</h2>
+      <div id="active-lab-summary" class="summary-grid"></div>
+      <p id="active-lab-evidence-status" class="muted"></p>
+      <button id="download-active-evidence" type="button" disabled>Download evidence JSON</button>
+      <h3>Recorded audit events and execution details</h3>
+      <pre id="active-lab-evidence" class="evidence-json"></pre>
     </section>
     <section id="results" hidden aria-live="polite">
       <h2>Execution results</h2>

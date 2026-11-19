@@ -285,7 +285,7 @@ class LabRequestHandler(BaseHTTPRequestHandler):
         if not allowed:
             return
         record_id = route[len(prefix):]
-        if record_id != LAB_RECORD_ID:
+        if record_id not in self.server.state:
             self._audit("record_not_found", principal, 404, "NOT_FOUND")
             self._reply(404, {"error": "Record not found"})
             return
@@ -294,10 +294,11 @@ class LabRequestHandler(BaseHTTPRequestHandler):
             if length < 2 or length > 1024:
                 raise ValueError("invalid body length")
             payload = json.loads(self.rfile.read(length))
+            if not isinstance(payload, dict):
+                raise ValueError("expected a JSON object")
             value = payload.get("value")
             if (
-                not isinstance(payload, dict)
-                or not set(payload).issubset({"value", "change_ticket"})
+                not set(payload).issubset({"value", "change_ticket"})
                 or "value" not in payload
                 or not isinstance(value, (int, float))
                 or isinstance(value, bool)
@@ -480,7 +481,7 @@ def run_active_defense_lab(evidence_dir: str | Path = EVIDENCE_DIR) -> dict[str,
             "completed_at_utc": datetime.now(timezone.utc).isoformat(),
             "target": {"bind": "127.0.0.1", "port": server.server_port, "transport": "HTTP loopback only"},
             "scenario": {
-                "id": "compromised-contributor-protected-record-write",
+                "id": "protected-write-prevention-and-working-copy-rollback",
                 "description": "A separate attacker process attempts a protected baseline overwrite, then performs an unapproved write to a working copy.",
                 "attack_action": "Attempt a protected-record write, retry after pre-mutation denial, mutate a working copy, and retry after detection and response.",
             },
@@ -489,6 +490,7 @@ def run_active_defense_lab(evidence_dir: str | Path = EVIDENCE_DIR) -> dict[str,
                 "prevented_before_mutation": prevented,
                 "protected_write_prevented": prevented,
                 "credential_revoked_after_prevention": active_response,
+                "credential_revoked": active_response and detected_and_recovered,
                 "unapproved_write_detected": detected_and_recovered,
                 "working_copy_rolled_back": detected_and_recovered,
                 "policy": "Protected baseline writes are denied before mutation. Unapproved working-copy mutations are detected, quarantined, rolled back, and followed by token revocation.",
@@ -516,7 +518,7 @@ def run_active_defense_lab(evidence_dir: str | Path = EVIDENCE_DIR) -> dict[str,
         evidence["report_sha256"] = _sha256(_canonical(evidence))
         path, file_hash = _write_evidence(evidence, Path(evidence_dir))
         return {
-            "status": "PASS" if outcome == "PREVENTED_AND_CREDENTIAL_REVOKED" else "FAIL",
+            "status": "PASS" if outcome == "PREVENTED_AND_DETECTED_ROLLED_BACK" else "FAIL",
             "outcome": outcome,
             "run_id": run_id,
             "evidence_path": str(path),

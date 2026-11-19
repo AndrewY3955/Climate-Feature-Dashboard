@@ -43,7 +43,7 @@ Use this section when presenting the one-click Security Demo Center output. Thes
 - **T1078 — Compromised contributor account (TABLETOP ONLY):** the scenario assumes an identity is compromised. The project has no login, MFA, authorization, or account-audit service, so it does not technically detect account compromise. The six response phases are a classroom walkthrough.
 - **T1565.001 — Stored Data Manipulation:** four exercises alter a copied value, omit water records, remove source attribution, or change a unit. A fifth changes a synthetic visualization-filter configuration. They demonstrate why record-level baselines, provenance, unit/scope validation, and filter review matter.
 - **T1565.002 — Transmitted Data Manipulation:** the transfer exercise changes bytes in a simulated payload and checks it against the sender-side digest. It is not a live network interception or transport-security test.
-- **Recovery:** for the technical scenarios, altered working data is held in an in-memory quarantine buffer, discarded, and replaced with trusted bytes. A matching restored digest and applicable schema validation show that this simulated recovery path worked; this is not a production backup/restore test.
+- **Recovery:** for the technical scenarios, altered working data is copied to a quarantine evidence file in the temporary lab directory, the altered working file is deleted, and trusted bytes are restored. The temporary directory, including quarantine evidence, is removed when the scenario ends. A matching restored digest and applicable schema validation show that this simulated recovery path worked; this is not a production backup/restore test.
 
 ### Comparability finding: 0 direct, 0 conditional, 21 not comparable
 
@@ -55,7 +55,7 @@ Do not say that the 21 results mean the audit failed, that the observations are 
 
 ### Simulation boundary and residual controls
 
-All scenario changes use temporary copies or synthetic in-memory settings; the trusted dataset is not modified. These are defensive classroom exercises, not live attacks, penetration tests, a production SOC, or a live threat feed. ATT&CK IDs are static technique references, not evidence of attribution or live detection.
+All technical scenario changes occur in disposable files inside temporary directories; the trusted dataset and project files are not modified. The Valid Accounts exercise is tabletop-only. These are defensive classroom exercises, not live attacks, penetration tests, a production SOC, or a live threat feed. ATT&CK IDs are static technique references, not evidence of attribution or live detection.
 
 The prototype does not deploy MFA, role-based access enforcement, central account/audit logging, independent manifest custody, production key management, immutable backups, or automated production recovery. AES-GCM is a standalone file demonstration. SHA-256 detects a difference only against a separately trusted reference.
 

@@ -2,7 +2,7 @@
 
 ## Executable attack-lab behavior
 
-The current Security Demo Center runs each technical attack as a separate Python child process against a disposable file in a newly created temporary directory. The child process is passed only the lab target path and executes a fixed scenario-specific mutation; it does not receive a production-data path, credentials, or a network target. This is an isolated local attack exercise, not an exploit against the deployed dashboard or an OS-level sandbox.
+The current Security Demo Center runs each technical attack as a separate Python child process against a disposable file in a newly created temporary directory. The child process receives only the fixed scenario identifier and runs with the temporary lab directory as its working directory. Its script opens one fixed lab filename; it does not receive a production-data path, credentials, or a network target. This is an isolated local attack exercise, not an exploit against the deployed dashboard or an OS-level sandbox.
 
 For each technical scenario, the defender records the trusted file's SHA-256, runs the attacker process, reads the changed target, compares the new digest with the trusted baseline, copies the altered bytes into a quarantine-evidence file, deletes the altered working target, restores the trusted baseline, and verifies the recovered digest. CSV scenarios also rerun the project's schema/source validation after recovery. The UI reports the child-process exit code and output, before/after/quarantine/recovery hashes, detection result, and incident-response phases.
 

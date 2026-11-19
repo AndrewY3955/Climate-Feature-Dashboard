@@ -377,7 +377,14 @@ else:
                 "detected": False,
                 "detail": f"Attacker process could not complete: {exc}",
                 "result": "FAIL — attack execution did not complete.",
-                "phases": [{"phase": "Attack execution", "status": "FAILED", "action": str(exc)}],
+                "phases": [
+                    {"phase": "Preparation", "status": "COMPLETE", "action": "Created disposable target and retained trusted baseline."},
+                    {"phase": "Detection and analysis", "status": "FAILED", "action": "Attacker process did not complete: " + str(exc)},
+                    {"phase": "Containment", "status": "NOT RUN", "action": "No altered artifact was confirmed for quarantine."},
+                    {"phase": "Eradication", "status": "NOT RUN", "action": "No altered working target was confirmed for removal."},
+                    {"phase": "Recovery", "status": "NOT RUN", "action": "Recovery was not claimed after failed attack execution."},
+                    {"phase": "Lessons learned", "status": "REVIEW REQUIRED", "action": scenario["control"]},
+                ],
                 "recovery_verified": False,
                 "attack_execution": {"mode": "isolated child process", "executed": False, "error": str(exc)},
             }
@@ -389,7 +396,14 @@ else:
                 "detected": False,
                 "detail": error,
                 "result": "FAIL — attack process failed; no defensive success is claimed.",
-                "phases": [{"phase": "Attack execution", "status": "FAILED", "action": error}],
+                "phases": [
+                    {"phase": "Preparation", "status": "COMPLETE", "action": "Created disposable target and retained trusted baseline."},
+                    {"phase": "Detection and analysis", "status": "FAILED", "action": "Attacker process failed: " + error},
+                    {"phase": "Containment", "status": "NOT RUN", "action": "No successful attack artifact was confirmed for quarantine."},
+                    {"phase": "Eradication", "status": "NOT RUN", "action": "No altered working target was confirmed for removal."},
+                    {"phase": "Recovery", "status": "NOT RUN", "action": "Recovery was not claimed after failed attack execution."},
+                    {"phase": "Lessons learned", "status": "REVIEW REQUIRED", "action": scenario["control"]},
+                ],
                 "recovery_verified": False,
                 "attack_execution": {
                     "mode": "isolated child process",
@@ -431,8 +445,7 @@ else:
             and validation_status in ("PASS", "NOT APPLICABLE")
         )
         phases = [
-            {"phase": "Preparation", "status": "COMPLETE", "action": f"Created disposable target {target_name}; trusted SHA-256={expected_hash}."},
-            {"phase": "Attack execution", "status": "EXECUTED" if process.returncode == 0 else "FAILED", "action": f"Isolated attacker child process exit code {process.returncode}; {detail}"},
+            {"phase": "Preparation", "status": "COMPLETE", "action": f"Created disposable target {target_name}; attacker child process exit code {process.returncode}; {detail} Trusted SHA-256={expected_hash}."},
             {"phase": "Detection and analysis", "status": "DETECTED" if detected else "NOT DETECTED", "action": f"Defender compared target SHA-256 {actual_hash} with trusted SHA-256 {expected_hash}."},
             {"phase": "Containment", "status": "COMPLETE" if quarantined else "FAILED", "action": f"Copied altered target to isolated quarantine evidence; evidence SHA-256={quarantine_hash}."},
             {"phase": "Eradication", "status": "COMPLETE" if eradicated else "FAILED", "action": "Deleted the altered working target after preserving quarantine evidence."},

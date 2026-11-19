@@ -324,33 +324,43 @@ def run_active_defense_lab(evidence_dir: str | Path = EVIDENCE_DIR) -> dict[str,
             if key in os.environ
         }
         with tempfile.TemporaryDirectory(prefix="active-defense-attacker-") as workdir:
-            process = subprocess.run(
+            process = subprocess.Popen(
                 [sys.executable, "-I", "-c", ATTACKER_SCRIPT, base_url, "lab-contributor-token"],
                 cwd=workdir,
                 stdin=subprocess.DEVNULL,
-                capture_output=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 text=True,
                 encoding="utf-8",
                 errors="replace",
-                timeout=10,
-                check=False,
                 env=child_env,
             )
+            timed_out = False
+            try:
+                stdout, stderr = process.communicate(timeout=10)
+            except subprocess.TimeoutExpired:
+                timed_out = True
+                process.kill()
+                stdout, stderr = process.communicate()
         attacker = {
-            "executed": process.returncode == 0,
-            "pid": None,
+            "executed": process.returncode == 0 and not timed_out,
+            "pid": process.pid,
+            "reported_pid": None,
+            "pid_matches_os_process": False,
+            "timed_out": timed_out,
             "exit_code": process.returncode,
-            "stdout": process.stdout.strip(),
-            "stderr": process.stderr.strip(),
+            "stdout": stdout.strip(),
+            "stderr": stderr.strip(),
             "target": base_url,
             "transport": "HTTP over loopback TCP",
             "shell": False,
             "external_hosts_contacted_by_harness": [],
         }
-        if process.stdout.strip():
+        if stdout.strip():
             try:
-                details = json.loads(process.stdout.strip().splitlines()[-1])
-                attacker["pid"] = details.get("pid")
+                details = json.loads(stdout.strip().splitlines()[-1])
+                attacker["reported_pid"] = details.get("pid")
+                attacker["pid_matches_os_process"] = details.get("pid") == process.pid
                 attacker["requests"] = details.get("requests", [])
             except json.JSONDecodeError:
                 attacker["parse_error"] = "Attacker output was not valid JSON"
@@ -393,7 +403,11 @@ def run_active_defense_lab(evidence_dir: str | Path = EVIDENCE_DIR) -> dict[str,
             "audit_events": events,
             "audit_chain_verified": verify_event_chain(events),
         }
-        outcome = "PREVENTED_AND_CREDENTIAL_REVOKED" if attacker["executed"] and prevented and active_response and evidence["audit_chain_verified"] else "FAIL"
+        pid_consistent = attacker["pid_matches_os_process"] and all(
+            event["process_id"] == str(attacker["pid"]) for event in events
+        )
+        evidence["attacker_process"]["audit_pid_matches_os_pid"] = pid_consistent
+        outcome = "PREVENTED_AND_CREDENTIAL_REVOKED" if attacker["executed"] and pid_consistent and prevented and active_response and evidence["audit_chain_verified"] else "FAIL"
         evidence["outcome"] = outcome
         evidence["report_sha256"] = _sha256(_canonical(evidence))
         path, file_hash = _write_evidence(evidence, Path(evidence_dir))

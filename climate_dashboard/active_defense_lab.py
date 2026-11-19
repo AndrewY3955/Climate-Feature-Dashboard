@@ -54,7 +54,10 @@ import json, os, sys
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 
-base, protected_token, editor_token = sys.argv[1], sys.argv[2], sys.argv[3]
+base = sys.argv[1]
+credentials = json.loads(sys.stdin.read())
+protected_token = credentials["protected_token"]
+editor_token = credentials["editor_token"]
 pid = os.getpid()
 results = []
 
@@ -411,9 +414,9 @@ def run_active_defense_lab(evidence_dir: str | Path = EVIDENCE_DIR) -> dict[str,
         }
         with tempfile.TemporaryDirectory(prefix="active-defense-attacker-") as workdir:
             process = subprocess.Popen(
-                [sys.executable, "-I", "-c", ATTACKER_SCRIPT, base_url, "lab-contributor-token", "lab-editor-token"],
+                [sys.executable, "-I", "-c", ATTACKER_SCRIPT, base_url],
                 cwd=workdir,
-                stdin=subprocess.DEVNULL,
+                stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
@@ -423,7 +426,13 @@ def run_active_defense_lab(evidence_dir: str | Path = EVIDENCE_DIR) -> dict[str,
             )
             timed_out = False
             try:
-                stdout, stderr = process.communicate(timeout=10)
+                stdout, stderr = process.communicate(
+                    input=json.dumps({
+                        "protected_token": "lab-contributor-token",
+                        "editor_token": "lab-editor-token",
+                    }),
+                    timeout=10,
+                )
             except subprocess.TimeoutExpired:
                 timed_out = True
                 process.kill()

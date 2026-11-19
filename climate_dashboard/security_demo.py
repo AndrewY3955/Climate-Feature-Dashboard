@@ -36,19 +36,19 @@ TRUSTED_FILE = REVIEWED_DIR / "trusted_data.csv"
 MANIFEST_FILE = REVIEWED_DIR / "trusted_manifest.json"
 
 LAB_DATA_FIXTURE = (
-    "record_id,metric,value,unit,source_name\\n"
-    "OBS001,Total energy consumption,27456000.0,MWh,Lab source\\n"
-    "OBS002,Water recycled from recovery systems,284600000.0,m3,Lab source\\n"
-    "OBS005,Scope 1 and Scope 2 greenhouse-gas emissions,14546000.0,t CO2e,Lab source\\n"
+    "record_id,metric,value,unit,source_name\n"
+    "OBS001,Total energy consumption,27456000.0,MWh,Lab source\n"
+    "OBS002,Water recycled from recovery systems,284600000.0,m3,Lab source\n"
+    "OBS005,Scope 1 and Scope 2 greenhouse-gas emissions,14546000.0,t CO2e,Lab source\n"
 ).encode("utf-8")
-LAB_PAYLOAD_FIXTURE = b"payload=27456000.0\\n"
+LAB_PAYLOAD_FIXTURE = b"payload=27456000.0\n"
 
 RESPONSE_PHASES = [
-    ("Preparation", "Preserve the trusted baseline, source evidence, expected hashes, and response contacts."),
+    ("Preparation", "Preserve the known-good lab baseline, source evidence, expected hashes, and response contacts."),
     ("Detection and analysis", "Identify the changed bytes or records, affected fields, and likely technique mapping."),
     ("Containment", "Quarantine the simulated changed copy; never overwrite the trusted source."),
     ("Eradication", "Remove the simulated altered working copy after preserving its evidence."),
-    ("Recovery", "Restore a fresh copy from the trusted baseline and verify its digest and data validation."),
+    ("Recovery", "Restore a fresh copy from the known-good lab baseline and verify its digest and data validation."),
     ("Lessons learned", "Record the control gap, evidence, residual risk, and follow-up action."),
 ]
 
@@ -75,8 +75,8 @@ SCENARIO_CATALOG = [
         "description": "Increase a copied energy observation by 50 percent.",
         "attack_vector": "Stored record value tampering (MITRE ATT&CK T1565.001).",
         "simulated_change": "Increase the value field of one copied energy observation by 50%; the trusted CSV remains unchanged.",
-        "defense_used": "Compare the altered copy's SHA-256 with the trusted baseline; preserve the changed bytes in a quarantine evidence file in the temporary lab directory; restore trusted bytes and validate the restored dataset. Record-level review is a recommended follow-up, not a separate automated detector in this scenario.",
-        "result_basis": "PASS when the digest mismatch detects the altered copy and the trusted-byte recovery digest and schema validation pass.",
+        "defense_used": "Compare the altered copy's SHA-256 with the known-good lab baseline; preserve the changed bytes in a quarantine evidence file in the temporary lab directory; restore known-good lab bytes and validate the restored dataset. Record-level review is a recommended follow-up, not a separate automated detector in this scenario.",
+        "result_basis": "PASS when the digest mismatch detects the altered copy and the lab-baseline recovery digest and schema validation pass.",
         "mode": "data",
         "control": "Compare the changed file with the protected trusted digest and record-level baseline.",
     },
@@ -88,8 +88,8 @@ SCENARIO_CATALOG = [
         "description": "Remove water observations from a copied dataset; removed is not zero.",
         "attack_vector": "Stored record deletion / omission (MITRE ATT&CK T1565.001).",
         "simulated_change": "Remove copied water-observation rows and retain their record IDs in the scenario evidence; trusted records remain intact.",
-        "defense_used": "The SHA-256 baseline comparison detects the changed file; quarantine the altered bytes and restore trusted bytes. Record-ID, row-count, and feature-coverage review are recommended follow-up checks, not separate automated detectors in this scenario.",
-        "result_basis": "PASS when the altered-copy digest differs and restored trusted bytes match the baseline and pass schema validation.",
+        "defense_used": "The SHA-256 baseline comparison detects the changed file; quarantine the altered bytes and restore known-good lab bytes. Record-ID, row-count, and feature-coverage review are recommended follow-up checks, not separate automated detectors in this scenario.",
+        "result_basis": "PASS when the altered-copy digest differs and restored lab bytes match the baseline and pass structural validation.",
         "mode": "data",
         "control": "Compare record IDs, row counts, feature coverage, and the trusted digest.",
     },
@@ -101,7 +101,7 @@ SCENARIO_CATALOG = [
         "description": "Blank a source label while retaining the original trusted record.",
         "attack_vector": "Stored provenance / source-attribution tampering (MITRE ATT&CK T1565.001).",
         "simulated_change": "Blank the source_name field on one copied observation; the original trusted record is preserved.",
-        "defense_used": "The SHA-256 baseline comparison detects the changed file; quarantine the altered bytes and restore trusted bytes. Required-source and provenance validation are recommended follow-up controls, not separately demonstrated detection in this scenario.",
+        "defense_used": "The SHA-256 baseline comparison detects the changed file; quarantine the altered bytes and restore known-good lab bytes. Required-source and provenance validation are recommended follow-up controls, not separately demonstrated detection in this scenario.",
         "result_basis": "PASS when the altered copy is detected and the restored trusted dataset passes digest and schema checks.",
         "mode": "data",
         "control": "Validate required provenance and compare the record with the trusted source copy.",
@@ -114,8 +114,8 @@ SCENARIO_CATALOG = [
         "description": "Change a unit or geography/boundary label without changing the source report.",
         "attack_vector": "Stored unit / reporting-scope tampering (MITRE ATT&CK T1565.001).",
         "simulated_change": "Change the unit field on one copied observation (for example, MWh to kg) without changing the source report.",
-        "defense_used": "The SHA-256 baseline comparison detects the changed file; quarantine the altered bytes and restore trusted bytes. Metric-unit and reporting-scope validation are recommended follow-up controls, not separately demonstrated detection in this scenario.",
-        "result_basis": "PASS when the changed copy is detected and restored trusted bytes pass digest and schema checks.",
+        "defense_used": "The SHA-256 baseline comparison detects the changed file; quarantine the altered bytes and restore known-good lab bytes. Metric-unit and reporting-scope validation are recommended follow-up controls, not separately demonstrated detection in this scenario.",
+        "result_basis": "PASS when the changed copy is detected and restored lab bytes pass digest and structural checks.",
         "mode": "data",
         "control": "Validate metric-unit pairs and compare year, geography, facility scope, and lifecycle boundary.",
     },
@@ -127,8 +127,8 @@ SCENARIO_CATALOG = [
         "description": "Change bytes in a simulated transfer payload and compare it with the sender-side digest.",
         "attack_vector": "In-transit payload modification (MITRE ATT&CK T1565.002); simulated bytes only, not a live network interception.",
         "simulated_change": "Alter one value sequence in a synthetic transfer payload; no network traffic or deployed transport path is modified.",
-        "defense_used": "Compare the received payload digest with the sender-side trusted digest; preserve the altered payload in a quarantine evidence file in the temporary lab directory and recover the original trusted bytes.",
-        "result_basis": "PASS when the payload digest mismatch is detected and the original trusted-byte digest is verified after recovery.",
+        "defense_used": "Compare the received payload digest with the sender-side lab baseline digest; preserve the altered payload in a quarantine evidence file in the temporary lab directory and recover the original known-good lab bytes.",
+        "result_basis": "PASS when the payload digest mismatch is detected and the original lab-fixture digest is verified after recovery.",
         "mode": "payload",
         "control": "Authenticate the transfer channel and verify a digest or signature from an independently trusted sender.",
     },
@@ -400,7 +400,7 @@ else:
                 "detail": f"Attacker process could not complete: {exc}",
                 "result": "FAIL — attack execution did not complete.",
                 "phases": [
-                    {"phase": "Preparation", "status": "COMPLETE", "action": "Created disposable target and retained trusted baseline."},
+                    {"phase": "Preparation", "status": "COMPLETE", "action": "Created disposable target and retained known-good lab baseline."},
                     {"phase": "Detection and analysis", "status": "FAILED", "action": "Attacker process did not complete: " + str(exc)},
                     {"phase": "Containment", "status": "NOT RUN", "action": "No altered artifact was confirmed for quarantine."},
                     {"phase": "Eradication", "status": "NOT RUN", "action": "No altered working target was confirmed for removal."},
@@ -419,7 +419,7 @@ else:
                 "detail": error,
                 "result": "FAIL — attack process failed; no defensive success is claimed.",
                 "phases": [
-                    {"phase": "Preparation", "status": "COMPLETE", "action": "Created disposable target and retained trusted baseline."},
+                    {"phase": "Preparation", "status": "COMPLETE", "action": "Created disposable target and retained known-good lab baseline."},
                     {"phase": "Detection and analysis", "status": "FAILED", "action": "Attacker process failed: " + error},
                     {"phase": "Containment", "status": "NOT RUN", "action": "No successful attack artifact was confirmed for quarantine."},
                     {"phase": "Eradication", "status": "NOT RUN", "action": "No altered working target was confirmed for removal."},
@@ -445,7 +445,7 @@ else:
         quarantined = quarantine_hash == actual_hash
 
         # Eradicate the compromised working file, then recover from the
-        # independently retained in-process trusted baseline.
+        # known-good lab baseline retained in process memory.
         target.unlink(missing_ok=True)
         eradicated = not target.exists()
         target.write_bytes(baseline)
@@ -455,8 +455,13 @@ else:
         validation_status = "NOT APPLICABLE"
         if scenario["mode"] == "data":
             frame = pd.read_csv(target)
-            source_register = pd.read_csv(SOURCE_REGISTER_FILE)
-            validation_status = validate_dataframe(frame, source_register)["status"]
+            required_lab_columns = {"record_id", "metric", "value", "unit", "source_name"}
+            valid_lab_fixture = (
+                required_lab_columns.issubset(frame.columns)
+                and not frame.empty
+                and frame["record_id"].notna().all()
+            )
+            validation_status = "PASS" if valid_lab_fixture else "FAIL"
 
         success = (
             process.returncode == 0
@@ -471,7 +476,7 @@ else:
             {"phase": "Detection and analysis", "status": "DETECTED" if detected else "NOT DETECTED", "action": f"Defender compared target SHA-256 {actual_hash} with trusted SHA-256 {expected_hash}."},
             {"phase": "Containment", "status": "COMPLETE" if quarantined else "FAILED", "action": f"Copied altered target to isolated quarantine evidence; evidence SHA-256={quarantine_hash}."},
             {"phase": "Eradication", "status": "COMPLETE" if eradicated else "FAILED", "action": "Deleted the altered working target after preserving quarantine evidence."},
-            {"phase": "Recovery", "status": "VERIFIED" if recovery_verified else "FAILED", "action": f"Restored trusted baseline; digest match={recovery_verified}; schema validation={validation_status}."},
+            {"phase": "Recovery", "status": "VERIFIED" if recovery_verified else "FAILED", "action": f"Restored known-good lab baseline; digest match={recovery_verified}; lab structural validation={validation_status}."},
             {"phase": "Lessons learned", "status": "COMPLETE", "action": scenario["control"]},
         ]
         return {
@@ -548,7 +553,7 @@ def run_security_demo() -> dict[str, Any]:
     comparisons = compare_all_records(records)
     scenarios = []
     for scenario in SCENARIO_CATALOG:
-        result = _response_exercise(scenario, trusted_bytes)
+        result = _response_exercise(scenario)
         scenarios.append({**scenario, **result})
 
     technical_scenarios = [item for item in scenarios if item["status"] != "TABLETOP ONLY"]

@@ -35,6 +35,14 @@ REVIEWED_DIR = ROOT / "data" / "processed" / "reviewed"
 TRUSTED_FILE = REVIEWED_DIR / "trusted_data.csv"
 MANIFEST_FILE = REVIEWED_DIR / "trusted_manifest.json"
 
+LAB_DATA_FIXTURE = (
+    "record_id,metric,value,unit,source_name\\n"
+    "OBS001,Total energy consumption,27456000.0,MWh,Lab source\\n"
+    "OBS002,Water recycled from recovery systems,284600000.0,m3,Lab source\\n"
+    "OBS005,Scope 1 and Scope 2 greenhouse-gas emissions,14546000.0,t CO2e,Lab source\\n"
+).encode("utf-8")
+LAB_PAYLOAD_FIXTURE = b"payload=27456000.0\\n"
+
 RESPONSE_PHASES = [
     ("Preparation", "Preserve the trusted baseline, source evidence, expected hashes, and response contacts."),
     ("Detection and analysis", "Identify the changed bytes or records, affected fields, and likely technique mapping."),
@@ -267,7 +275,7 @@ def _mutate_scenario(scenario_id: str, original: bytes) -> tuple[bytes, str]:
     raise ValueError(f"Unknown data scenario: {scenario_id}")
 
 
-def _response_exercise(scenario: dict[str, Any], trusted_bytes: bytes) -> dict[str, Any]:
+def _response_exercise(scenario: dict[str, Any]) -> dict[str, Any]:
     """Execute an attacker child process against a disposable lab file, then defend it."""
     if scenario["mode"] == "tabletop":
         return {
@@ -287,9 +295,12 @@ def _response_exercise(scenario: dict[str, Any], trusted_bytes: bytes) -> dict[s
             },
         }
 
-    baseline = trusted_bytes
     target_name = "lab-target.data"
-    if scenario["mode"] == "visual":
+    if scenario["mode"] == "data":
+        baseline = LAB_DATA_FIXTURE
+    elif scenario["mode"] == "payload":
+        baseline = LAB_PAYLOAD_FIXTURE
+    elif scenario["mode"] == "visual":
         baseline = json.dumps({
             "view": "environmental-observations",
             "filters": {"year": "all", "metric": "all", "include_water": True},

@@ -288,20 +288,20 @@ def _response_exercise(scenario: dict[str, Any], trusted_bytes: bytes) -> dict[s
         }
 
     baseline = trusted_bytes
-    target_name = "target.csv"
+    target_name = "lab-target.data"
     if scenario["mode"] == "visual":
         baseline = json.dumps({
             "view": "environmental-observations",
             "filters": {"year": "all", "metric": "all", "include_water": True},
             "axis": "reported value with unit",
         }, sort_keys=True).encode("utf-8")
-        target_name = "dashboard-config.json"
+        target_name = "lab-target.data"
 
     # This child process is the attacker. It has one target path in a temporary
     # directory, no shell, no network code, and no access to project paths.
     attacker_script = r'''
 import csv, io, json, pathlib, sys
-scenario, filename = sys.argv[1], pathlib.Path(sys.argv[2])
+scenario, filename = sys.argv[1], pathlib.Path("lab-target.data")
 original = filename.read_bytes()
 if scenario == "transmitted-payload":
     changed = original.replace(b"27456000", b"37456000", 1)
@@ -371,7 +371,7 @@ else:
         }
         try:
             process = subprocess.run(
-                [sys.executable, "-I", "-c", attacker_script, scenario["scenario_id"], str(target)],
+                [sys.executable, "-I", "-c", attacker_script, scenario["scenario_id"]],
                 cwd=lab_dir,
                 stdin=subprocess.DEVNULL,
                 capture_output=True,

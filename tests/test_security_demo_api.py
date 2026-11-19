@@ -116,7 +116,7 @@ def test_active_defense_endpoint_runs_live_lab_on_local_same_origin(monkeypatch)
     monkeypatch.setattr(
         climate_dashboard.active_defense_lab,
         "run_active_defense_lab",
-        lambda: {"status": "PASS", "outcome": "PREVENTED_AND_CREDENTIAL_REVOKED"},
+        lambda: {"status": "PASS", "outcome": "PREVENTED_AND_DETECTED_ROLLED_BACK"},
     )
     server = ThreadingHTTPServer(("127.0.0.1", 0), DashboardHandler)
     thread = Thread(target=server.serve_forever, daemon=True)
@@ -127,7 +127,7 @@ def test_active_defense_endpoint_runs_live_lab_on_local_same_origin(monkeypatch)
         assert status == 200
         result = json.loads(payload)
         assert result["status"] == "PASS"
-        assert result["outcome"] == "PREVENTED_AND_CREDENTIAL_REVOKED"
+        assert result["outcome"] == "PREVENTED_AND_DETECTED_ROLLED_BACK"
     finally:
         server.shutdown()
         server.server_close()

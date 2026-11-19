@@ -11,6 +11,7 @@ import csv
 import hashlib
 import io
 import json
+import os
 import secrets
 import subprocess
 import sys
@@ -360,16 +361,26 @@ else:
         target.write_bytes(baseline)
         expected_hash = _sha256(baseline)
 
+        # Do not pass application credentials, API tokens, or unrelated
+        # environment variables into the attacker process. Windows receives
+        # only the OS variables needed to start Python reliably.
+        child_env = {
+            key: os.environ[key]
+            for key in ("SYSTEMROOT", "WINDIR", "TEMP", "TMP")
+            if key in os.environ
+        }
         try:
             process = subprocess.run(
                 [sys.executable, "-I", "-c", attacker_script, scenario["scenario_id"], str(target)],
                 cwd=lab_dir,
+                stdin=subprocess.DEVNULL,
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
                 errors="replace",
                 timeout=5,
                 check=False,
+                env=child_env,
             )
         except (OSError, subprocess.TimeoutExpired) as exc:
             return {

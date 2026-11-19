@@ -27,9 +27,9 @@ The demo runs through the local-only `POST /api/security-demo/run` endpoint. Git
 |---|---|---|
 | Compromised contributor identity | T1078 – Valid Accounts | Tabletop exercise only. The local prototype has no authentication or account-audit service, so it cannot technically detect account compromise. |
 | Altered environmental value | T1565.001 – Stored Data Manipulation | A child process increases an energy value in a disposable CSV file; detect the changed digest, quarantine the altered file, and restore the known-good lab baseline. |
-| Deleted environmental observations | T1565.001 – Stored Data Manipulation | A child process deletes water rows from a disposable CSV file; detect the changed digest, quarantine the altered file, and restore the trusted baseline. |
-| Removed source attribution | T1565.001 – Stored Data Manipulation | A child process blanks a source label in a disposable CSV file; detect the changed digest, quarantine the altered file, and restore the trusted baseline. |
-| Changed unit/scope metadata | T1565.001 – Stored Data Manipulation | A child process changes a unit in a disposable CSV file; detect the changed digest, quarantine the altered file, and restore the trusted baseline. |
+| Deleted environmental observations | T1565.001 – Stored Data Manipulation | A child process deletes water rows from a disposable CSV file; detect the changed digest, quarantine the altered file, and restore the known-good lab baseline. |
+| Removed source attribution | T1565.001 – Stored Data Manipulation | A child process blanks a source label in a disposable CSV file; detect the changed digest, quarantine the altered file, and restore the known-good lab baseline. |
+| Changed unit/scope metadata | T1565.001 – Stored Data Manipulation | A child process changes a unit in a disposable CSV file; detect the changed digest, quarantine the altered file, and restore the known-good lab baseline. |
 | Altered transfer payload | T1565.002 – Transmitted Data Manipulation | A child process alters a local transfer-fixture file; compare its digest with the trusted sender-side baseline. No network interception is performed. |
 | Misleading visualization filter | T1565.001 – Stored Data Manipulation (scenario mapping) | A child process changes include_water in a disposable dashboard-config.json file. This is not an edit to the deployed dashboard configuration. |
 
@@ -43,7 +43,7 @@ Each technical scenario executes the six documented phases:
 2. **Detection and analysis:** identify changed bytes or record details.
 3. **Containment:** copy the altered artifact into a quarantine evidence file inside the temporary lab directory.
 4. **Eradication:** remove the altered working copy after preserving evidence.
-5. **Recovery:** restore from a separate trusted baseline and verify the recovered digest; data scenarios validate the restored synthetic lab CSV structure; the reviewed trusted dataset is validated separately at the start of the run.
+5. **Recovery:** restore from the known-good synthetic lab baseline and verify the recovered digest; data scenarios validate the restored synthetic lab CSV structure; the reviewed dataset is validated separately at the start of the run.
 6. **Lessons learned:** show the relevant defensive control and residual limitation.
 
 The Valid Accounts scenario runs all six phases as a tabletop exercise. It is explicitly marked **TABLETOP ONLY**, not a successful technical detection.

@@ -355,7 +355,8 @@ class LabRequestHandler(BaseHTTPRequestHandler):
             restored_hash = _state_digest(self.server.state)
             quarantine_item["restored_sha256"] = restored_hash
             quarantine_item["rollback_verified"] = (
-                self.server.state[record_id] == self.server.baseline[record_id]
+                restored_hash == before
+                and self.server.state[record_id] == self.server.baseline[record_id]
             )
             self._audit("automatic_rollback", principal, 409, "ROLLBACK_TO_KNOWN_GOOD_BASELINE")
             if token:
@@ -468,7 +469,15 @@ def run_active_defense_lab(evidence_dir: str | Path = EVIDENCE_DIR) -> dict[str,
         protected_retry = next((item for item in requests if item["step"] == "protected_retry_after_revocation"), {})
         working_write = next((item for item in requests if item["step"] == "unapproved_working_copy_write"), {})
         working_retry = next((item for item in requests if item["step"] == "working_copy_retry_after_response"), {})
-        prevented = protected_write.get("http_status") == 403 and after_hash == before_hash
+        protected_event = next(
+            (event for event in events if event["event_type"] == "protected_write_blocked"),
+            {},
+        )
+        prevented = (
+            protected_write.get("http_status") == 403
+            and protected_event.get("state_sha256") == before_hash
+            and after_hash == before_hash
+        )
         active_response = (
             protected_write.get("response", {}).get("credential_revoked") is True
             and protected_retry.get("http_status") == 401
@@ -481,7 +490,12 @@ def run_active_defense_lab(evidence_dir: str | Path = EVIDENCE_DIR) -> dict[str,
             and working_write.get("response", {}).get("credential_revoked") is True
             and working_retry.get("http_status") == 401
             and bool(server.quarantine)
-            and all(item["rollback_verified"] for item in server.quarantine)
+            and all(
+                item["rollback_verified"]
+                and item["restored_sha256"] == item["before_sha256"]
+                and item["modified_sha256"] != item["restored_sha256"]
+                for item in server.quarantine
+            )
         )
         evidence = {
             "schema_version": 1,

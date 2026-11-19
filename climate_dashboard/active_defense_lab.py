@@ -12,6 +12,7 @@ import argparse
 import hashlib
 import json
 import os
+import secrets
 import subprocess
 import sys
 import tempfile
@@ -28,6 +29,7 @@ from urllib.error import HTTPError
 ROOT = Path(__file__).resolve().parents[1]
 EVIDENCE_DIR = ROOT / "evidence" / "active-defense-lab"
 LAB_RECORD_ID = "OBS-LAB-001"
+LAB_WORKING_RECORD_ID = "OBS-LAB-WORKING-001"
 LAB_BASELINE = {
     LAB_RECORD_ID: {
         "record_id": LAB_RECORD_ID,
@@ -36,7 +38,15 @@ LAB_BASELINE = {
         "unit": "MWh",
         "source_name": "Synthetic isolated-lab fixture",
         "protected": True,
-    }
+    },
+    LAB_WORKING_RECORD_ID: {
+        "record_id": LAB_WORKING_RECORD_ID,
+        "metric": "Water recycled from recovery systems",
+        "value": 50.0,
+        "unit": "m3",
+        "source_name": "Synthetic isolated working-copy fixture",
+        "protected": False,
+    },
 }
 
 ATTACKER_SCRIPT = r'''
@@ -44,11 +54,11 @@ import json, os, sys
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 
-base, token = sys.argv[1], sys.argv[2]
+base, protected_token, editor_token = sys.argv[1], sys.argv[2], sys.argv[3]
 pid = os.getpid()
 results = []
 
-def call(method, path, body=None):
+def call(method, path, token, body=None):
     data = None if body is None else json.dumps(body).encode("utf-8")
     request = Request(
         base + path,
@@ -70,12 +80,20 @@ def call(method, path, body=None):
             payload = {"error": str(error)}
         return error.code, payload
 
-status, payload = call("GET", "/api/records/" + "OBS-LAB-001")
-results.append({"step": "read_target", "http_status": status, "response": payload})
-status, payload = call("PUT", "/api/records/" + "OBS-LAB-001", {"value": 999999.0})
-results.append({"step": "unauthorized_write", "http_status": status, "response": payload})
-status, payload = call("PUT", "/api/records/" + "OBS-LAB-001", {"value": 888888.0})
-results.append({"step": "retry_after_defense", "http_status": status, "response": payload})
+protected_path = "/api/records/OBS-LAB-001"
+working_path = "/api/records/OBS-LAB-WORKING-001"
+status, payload = call("GET", protected_path, protected_token)
+results.append({"step": "read_protected_target", "http_status": status, "response": payload})
+status, payload = call("PUT", protected_path, protected_token, {"value": 999999.0})
+results.append({"step": "protected_write_attempt", "http_status": status, "response": payload})
+status, payload = call("PUT", protected_path, protected_token, {"value": 888888.0})
+results.append({"step": "protected_retry_after_revocation", "http_status": status, "response": payload})
+status, payload = call("GET", working_path, editor_token)
+results.append({"step": "read_working_copy", "http_status": status, "response": payload})
+status, payload = call("PUT", working_path, editor_token, {"value": 777777.0})
+results.append({"step": "unapproved_working_copy_write", "http_status": status, "response": payload})
+status, payload = call("PUT", working_path, editor_token, {"value": 666666.0})
+results.append({"step": "working_copy_retry_after_response", "http_status": status, "response": payload})
 print(json.dumps({"pid": pid, "requests": results}, sort_keys=True))
 '''
 
@@ -171,11 +189,15 @@ class LabHTTPServer(ThreadingHTTPServer):
     def __init__(self, address: tuple[str, int], run_id: str):
         super().__init__(address, LabRequestHandler)
         self.run_id = run_id
-        self.state = json.loads(json.dumps(LAB_BASELINE))
+        self.baseline = json.loads(json.dumps(LAB_BASELINE))
+        self.state = json.loads(json.dumps(self.baseline))
         self.tokens = {
             "lab-contributor-token": {"principal": "lab-contributor", "scopes": {"read", "write"}},
+            "lab-editor-token": {"principal": "lab-editor", "scopes": {"read", "write"}},
         }
+        self.approved_change_ticket = secrets.token_urlsafe(32)
         self.revoked_tokens: set[str] = set()
+        self.quarantine: list[dict[str, Any]] = []
         self.audit = AuditTrail()
         self.state_lock = threading.RLock()
 
@@ -273,8 +295,14 @@ class LabRequestHandler(BaseHTTPRequestHandler):
                 raise ValueError("invalid body length")
             payload = json.loads(self.rfile.read(length))
             value = payload.get("value")
-            if set(payload) != {"value"} or not isinstance(value, (int, float)) or isinstance(value, bool):
-                raise ValueError("expected one numeric value")
+            if (
+                not isinstance(payload, dict)
+                or not set(payload).issubset({"value", "change_ticket"})
+                or "value" not in payload
+                or not isinstance(value, (int, float))
+                or isinstance(value, bool)
+            ):
+                raise ValueError("expected a numeric value and optional change ticket")
         except (ValueError, json.JSONDecodeError, UnicodeDecodeError):
             self._audit("invalid_write_request", principal, 400, "DENY_INVALID_PAYLOAD")
             self._reply(400, {"error": "Expected JSON containing one numeric value", "decision": "DENY"})
@@ -282,9 +310,8 @@ class LabRequestHandler(BaseHTTPRequestHandler):
 
         with self.server.state_lock:
             record = self.server.state[record_id]
-            if record["protected"]:
-                # Active enforcement: deny before mutation, revoke the credential,
-                # and log both the policy decision and revocation.
+            change_ticket = payload.get("change_ticket")
+            if record["protected"] and change_ticket != self.server.approved_change_ticket:
                 if token:
                     self.server.revoked_tokens.add(token)
                 self._audit("protected_write_blocked", principal, 403, "DENY_PROTECTED_RECORD")
@@ -296,11 +323,51 @@ class LabRequestHandler(BaseHTTPRequestHandler):
                 })
                 return
 
+            if change_ticket == self.server.approved_change_ticket:
+                before = _state_digest(self.server.state)
+                record["value"] = float(value)
+                after = _state_digest(self.server.state)
+                self._audit("approved_record_write", principal, 200, "ALLOW_APPROVED_WRITE")
+                self._reply(200, {"decision": "ALLOW_APPROVED_WRITE", "before_sha256": before, "after_sha256": after})
+                return
+
+            # Simulate a compromised but write-capable contributor changing a
+            # working copy. The target detects the unapproved mutation, preserves
+            # its changed bytes in quarantine evidence, rolls back, and revokes.
             before = _state_digest(self.server.state)
             record["value"] = float(value)
-            after = _state_digest(self.server.state)
-            self._audit("record_write", principal, 200, "ALLOW_WRITE")
-            self._reply(200, {"decision": "ALLOW", "before_sha256": before, "after_sha256": after})
+            modified_state = json.loads(json.dumps(self.server.state))
+            modified_hash = _state_digest(modified_state)
+            quarantine_item = {
+                "record_id": record_id,
+                "changed_record": dict(record),
+                "before_sha256": before,
+                "modified_sha256": modified_hash,
+                "detected_at_utc": datetime.now(timezone.utc).isoformat(),
+            }
+            self.server.quarantine.append(quarantine_item)
+            self._audit("unapproved_write_detected", principal, 409, "DETECT_UNAPPROVED_MUTATION")
+            self.server.state[record_id] = json.loads(json.dumps(self.server.baseline[record_id]))
+            restored_hash = _state_digest(self.server.state)
+            quarantine_item["restored_sha256"] = restored_hash
+            quarantine_item["rollback_verified"] = (
+                self.server.state[record_id] == self.server.baseline[record_id]
+            )
+            self._audit("automatic_rollback", principal, 409, "ROLLBACK_TO_KNOWN_GOOD_BASELINE")
+            if token:
+                self.server.revoked_tokens.add(token)
+            self._audit("credential_revoked", principal, 409, "REVOKE_TOKEN_AFTER_DETECTED_MUTATION")
+            self._reply(409, {
+                "error": "Unapproved working-copy mutation detected; evidence quarantined, baseline restored, and token revoked",
+                "decision": "DETECT_QUARANTINE_ROLLBACK_REVOKE",
+                "detected": True,
+                "quarantined": True,
+                "rolled_back": quarantine_item["rollback_verified"],
+                "credential_revoked": True,
+                "before_sha256": before,
+                "modified_sha256": modified_hash,
+                "restored_sha256": restored_hash,
+            })
 
 
 def _request_health(base_url: str) -> None:
@@ -343,7 +410,7 @@ def run_active_defense_lab(evidence_dir: str | Path = EVIDENCE_DIR) -> dict[str,
         }
         with tempfile.TemporaryDirectory(prefix="active-defense-attacker-") as workdir:
             process = subprocess.Popen(
-                [sys.executable, "-I", "-c", ATTACKER_SCRIPT, base_url, "lab-contributor-token"],
+                [sys.executable, "-I", "-c", ATTACKER_SCRIPT, base_url, "lab-contributor-token", "lab-editor-token"],
                 cwd=workdir,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
@@ -386,13 +453,25 @@ def run_active_defense_lab(evidence_dir: str | Path = EVIDENCE_DIR) -> dict[str,
         after_state = json.loads(json.dumps(server.state))
         after_hash = _state_digest(after_state)
         events = list(server.audit.events)
-        write_attempt = next((item for item in attacker.get("requests", []) if item["step"] == "unauthorized_write"), {})
-        retry_attempt = next((item for item in attacker.get("requests", []) if item["step"] == "retry_after_defense"), {})
-        prevented = write_attempt.get("http_status") == 403 and after_hash == before_hash
+        requests = attacker.get("requests", [])
+        protected_write = next((item for item in requests if item["step"] == "protected_write_attempt"), {})
+        protected_retry = next((item for item in requests if item["step"] == "protected_retry_after_revocation"), {})
+        working_write = next((item for item in requests if item["step"] == "unapproved_working_copy_write"), {})
+        working_retry = next((item for item in requests if item["step"] == "working_copy_retry_after_response"), {})
+        prevented = protected_write.get("http_status") == 403 and after_hash == before_hash
         active_response = (
-            write_attempt.get("response", {}).get("credential_revoked") is True
-            and retry_attempt.get("http_status") == 401
-            and any(event["event_type"] == "credential_revoked" for event in events)
+            protected_write.get("response", {}).get("credential_revoked") is True
+            and protected_retry.get("http_status") == 401
+        )
+        detected_and_recovered = (
+            working_write.get("http_status") == 409
+            and working_write.get("response", {}).get("detected") is True
+            and working_write.get("response", {}).get("quarantined") is True
+            and working_write.get("response", {}).get("rolled_back") is True
+            and working_write.get("response", {}).get("credential_revoked") is True
+            and working_retry.get("http_status") == 401
+            and bool(server.quarantine)
+            and all(item["rollback_verified"] for item in server.quarantine)
         )
         evidence = {
             "schema_version": 1,
@@ -402,14 +481,17 @@ def run_active_defense_lab(evidence_dir: str | Path = EVIDENCE_DIR) -> dict[str,
             "target": {"bind": "127.0.0.1", "port": server.server_port, "transport": "HTTP loopback only"},
             "scenario": {
                 "id": "compromised-contributor-protected-record-write",
-                "description": "A separate attacker process uses a lab contributor token to attempt to overwrite a protected synthetic record.",
-                "attack_action": "GET the target record, PUT a malicious replacement value, then retry after the defensive response.",
+                "description": "A separate attacker process attempts a protected baseline overwrite, then performs an unapproved write to a working copy.",
+                "attack_action": "Attempt a protected-record write, retry after pre-mutation denial, mutate a working copy, and retry after detection and response.",
             },
             "attacker_process": attacker,
             "defense": {
                 "prevented_before_mutation": prevented,
-                "credential_revoked": active_response,
-                "policy": "Protected baseline records reject writes without an approved change ticket; the violating lab token is revoked.",
+                "protected_write_prevented": prevented,
+                "credential_revoked_after_prevention": active_response,
+                "unapproved_write_detected": detected_and_recovered,
+                "working_copy_rolled_back": detected_and_recovered,
+                "policy": "Protected baseline writes are denied before mutation. Unapproved working-copy mutations are detected, quarantined, rolled back, and followed by token revocation.",
             },
             "target_state": {
                 "before": before_state,
@@ -417,6 +499,7 @@ def run_active_defense_lab(evidence_dir: str | Path = EVIDENCE_DIR) -> dict[str,
                 "before_sha256": before_hash,
                 "after_sha256": after_hash,
                 "unchanged": before_hash == after_hash,
+                "quarantine_evidence": server.quarantine,
             },
             "audit_events": events,
             "audit_chain_verified": verify_event_chain(events),
@@ -425,7 +508,10 @@ def run_active_defense_lab(evidence_dir: str | Path = EVIDENCE_DIR) -> dict[str,
             event["process_id"] == str(attacker["pid"]) for event in events
         )
         evidence["attacker_process"]["audit_pid_matches_os_pid"] = pid_consistent
-        outcome = "PREVENTED_AND_CREDENTIAL_REVOKED" if attacker["executed"] and pid_consistent and prevented and active_response and evidence["audit_chain_verified"] else "FAIL"
+        outcome = "PREVENTED_AND_DETECTED_ROLLED_BACK" if (
+            attacker["executed"] and pid_consistent and prevented and active_response
+            and detected_and_recovered and evidence["audit_chain_verified"]
+        ) else "FAIL"
         evidence["outcome"] = outcome
         evidence["report_sha256"] = _sha256(_canonical(evidence))
         path, file_hash = _write_evidence(evidence, Path(evidence_dir))

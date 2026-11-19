@@ -48,7 +48,7 @@ Each technical scenario executes the six documented phases:
 
 The Valid Accounts scenario runs all six phases as a tabletop exercise. It is explicitly marked **TABLETOP ONLY**, not a successful technical detection.
 
-All technical scenarios use temporary directories. The fixed attacker child process receives only the scenario identifier and one disposable target path, runs without a shell, and performs no network operations. This is process-level scope restriction, not an OS sandbox. Quarantine evidence is written to a temporary file and removed with the directory after the exercise. The trusted dataset, manifest, source files, generated adversarial dataset, and repository files are not modified by the demo.
+All technical scenarios use temporary directories. The fixed attacker child process receives only a validated scenario identifier, runs with the temporary lab directory as its working directory, and opens one fixed target filename. It runs without a shell and performs no network operations. This is process-level scope restriction, not an OS sandbox. Quarantine evidence is written to a temporary file and removed with the directory after the exercise. The trusted dataset, manifest, source files, generated adversarial dataset, and repository files are not modified by the demo.
 
 ## Comparability audit
 

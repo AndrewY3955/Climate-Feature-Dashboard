@@ -55,7 +55,7 @@ Do not say that the 21 results mean the audit failed, that the observations are 
 
 ### Simulation boundary and residual controls
 
-All technical scenario changes occur in disposable files inside temporary directories; the reviewed dataset and project files are not modified. Attack fixtures are synthetic and structurally representative, not copies of the reviewed dataset. The Valid Accounts exercise is tabletop-only. These are defensive classroom exercises, not live attacks, penetration tests, a production SOC, or a live threat feed. ATT&CK IDs are static technique references, not evidence of attribution or live detection.
+All technical scenario changes occur in disposable files inside temporary directories; the reviewed dataset and project files are not modified. Attack fixtures are synthetic and structurally representative, not copies of the reviewed dataset. The Valid Accounts exercise is tabletop-only. These are executable attack exercises against isolated synthetic lab fixtures, not attacks against the deployed dashboard or external systems, penetration tests, a production SOC, or a live threat feed. ATT&CK IDs are static technique references, not evidence of attribution or live detection.
 
 The prototype does not deploy MFA, role-based access enforcement, central account/audit logging, independent manifest custody, production key management, immutable backups, or automated production recovery. AES-GCM is a standalone file demonstration. SHA-256 detects a difference only against a separately trusted reference.
 

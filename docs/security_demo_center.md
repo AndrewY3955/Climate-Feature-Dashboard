@@ -31,7 +31,7 @@ The demo runs through the local-only `POST /api/security-demo/run` endpoint. Git
 | Removed source attribution | T1565.001 – Stored Data Manipulation | A child process blanks a source label in a disposable CSV file; detect the changed digest, quarantine the altered file, and restore the known-good lab baseline. |
 | Changed unit/scope metadata | T1565.001 – Stored Data Manipulation | A child process changes a unit in a disposable CSV file; detect the changed digest, quarantine the altered file, and restore the known-good lab baseline. |
 | Altered transfer payload | T1565.002 – Transmitted Data Manipulation | A child process alters a local transfer-fixture file; compare its digest with the trusted sender-side baseline. No network interception is performed. |
-| Misleading visualization filter | T1565.001 – Stored Data Manipulation (scenario mapping) | A child process changes include_water in a disposable dashboard-config.json file. This is not an edit to the deployed dashboard configuration. |
+| Misleading visualization filter | T1565.001 – Stored Data Manipulation (scenario mapping) | A child process changes include_water in a disposable synthetic dashboard-configuration fixture file. This is not an edit to the deployed dashboard configuration. |
 
 These are the three ATT&CK techniques currently mapped in the project, with multiple concrete variants for stored-data manipulation. This is not coverage of every technique in the MITRE ATT&CK framework.
 

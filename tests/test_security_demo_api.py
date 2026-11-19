@@ -108,3 +108,47 @@ def test_security_demo_endpoint_returns_actionable_error_when_dependency_missing
         server.shutdown()
         server.server_close()
         thread.join(timeout=3)
+
+
+def test_active_defense_endpoint_runs_live_lab_on_local_same_origin(monkeypatch):
+    import climate_dashboard.active_defense_lab
+
+    monkeypatch.setattr(
+        climate_dashboard.active_defense_lab,
+        "run_active_defense_lab",
+        lambda: {"status": "PASS", "outcome": "PREVENTED_AND_CREDENTIAL_REVOKED"},
+    )
+    server = ThreadingHTTPServer(("127.0.0.1", 0), DashboardHandler)
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    port = server.server_port
+    try:
+        status, payload = _active_request(port, f"http://127.0.0.1:{port}")
+        assert status == 200
+        result = json.loads(payload)
+        assert result["status"] == "PASS"
+        assert result["outcome"] == "PREVENTED_AND_CREDENTIAL_REVOKED"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join(timeout=3)
+
+
+def _active_request(port, origin):
+    connection = http.client.HTTPConnection("127.0.0.1", port, timeout=3)
+    body = b"{}"
+    connection.request(
+        "POST",
+        "/api/active-defense-lab/run",
+        body=body,
+        headers={
+            "Host": f"127.0.0.1:{port}",
+            "Origin": origin,
+            "Content-Type": "application/json",
+            "Content-Length": str(len(body)),
+        },
+    )
+    response = connection.getresponse()
+    result = response.status, response.read()
+    connection.close()
+    return result

@@ -308,8 +308,8 @@ def _response_exercise(scenario: dict[str, Any]) -> dict[str, Any]:
         }, sort_keys=True).encode("utf-8")
         target_name = "lab-target.data"
 
-    # This child process is the attacker. It has one target path in a temporary
-    # directory, no shell, no network code, and no access to project paths.
+    # This child process is the attacker. It runs in a temporary
+    # directory, opens one fixed lab filename, has no shell or network code, and has no production-data path.
     attacker_script = r'''
 import csv, io, json, pathlib, sys
 scenario, filename = sys.argv[1], pathlib.Path("lab-target.data")
@@ -472,8 +472,8 @@ else:
             and validation_status in ("PASS", "NOT APPLICABLE")
         )
         phases = [
-            {"phase": "Preparation", "status": "COMPLETE", "action": f"Created disposable target {target_name}; attacker child process exit code {process.returncode}; {detail} Trusted SHA-256={expected_hash}."},
-            {"phase": "Detection and analysis", "status": "DETECTED" if detected else "NOT DETECTED", "action": f"Defender compared target SHA-256 {actual_hash} with trusted SHA-256 {expected_hash}."},
+            {"phase": "Preparation", "status": "COMPLETE", "action": f"Created disposable target {target_name}; attacker child process exit code {process.returncode}; {detail} Lab-baseline SHA-256={expected_hash}."},
+            {"phase": "Detection and analysis", "status": "DETECTED" if detected else "NOT DETECTED", "action": f"Defender compared target SHA-256 {actual_hash} with lab-baseline SHA-256 {expected_hash}."},
             {"phase": "Containment", "status": "COMPLETE" if quarantined else "FAILED", "action": f"Copied altered target to isolated quarantine evidence; evidence SHA-256={quarantine_hash}."},
             {"phase": "Eradication", "status": "COMPLETE" if eradicated else "FAILED", "action": "Deleted the altered working target after preserving quarantine evidence."},
             {"phase": "Recovery", "status": "VERIFIED" if recovery_verified else "FAILED", "action": f"Restored known-good lab baseline; digest match={recovery_verified}; lab structural validation={validation_status}."},

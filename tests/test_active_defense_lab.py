@@ -35,6 +35,7 @@ def test_live_attacker_process_is_blocked_and_credential_revoked(tmp_path):
     assert quarantine[0]["changed_record"]["value"] == 777777.0
     assert quarantine[0]["rollback_verified"] is True
     assert quarantine[0]["modified_sha256"] != quarantine[0]["restored_sha256"]
+    assert quarantine[0]["before_sha256"] == quarantine[0]["restored_sha256"]
     assert evidence["target_state"]["unchanged"] is True
     assert evidence["target_state"]["before_sha256"] == evidence["target_state"]["after_sha256"]
     assert evidence["audit_chain_verified"] is True

@@ -243,6 +243,7 @@ activeLabButton.addEventListener("click", async () => {
     addActiveSummary("Attacker process", payload.evidence?.attacker_process?.executed ? "Executed" : "Not executed");
     addActiveSummary("HTTP attack sequence", (payload.evidence?.attacker_process?.requests || []).map(item => item.http_status).join(" → "));
     addActiveSummary("Credential revoked", payload.evidence?.defense?.credential_revoked ? "Yes" : "No");
+    addActiveSummary("Working-copy rollback", payload.evidence?.defense?.working_copy_rolled_back ? "Verified" : "Not verified");
     addActiveSummary("Protected data unchanged", payload.evidence?.target_state?.unchanged ? "Verified" : "Not verified");
     activeEvidenceBundle = payload.evidence || null;
     activeLabEvidence.textContent = JSON.stringify(payload.evidence || payload, null, 2);
@@ -251,7 +252,7 @@ activeLabButton.addEventListener("click", async () => {
       : "Evidence verification failed or was not available. Do not treat this run as a successful defense.";
     downloadActiveEvidence.disabled = !activeEvidenceBundle || !payload.evidence_verifiable;
     activeLabStatus.textContent = payload.status === "PASS"
-      ? "Complete: the live write attempt was denied before mutation and the lab credential was revoked."
+      ? "Complete: the protected write was denied; the working-copy change was detected, quarantined, rolled back, and credentials were revoked."
       : "The exercise did not meet every success condition. Inspect the evidence; do not claim a successful defense.";
   } catch (error) {
     activeLabStatus.textContent = "Unable to complete the active-defense exercise: " + error.message;
